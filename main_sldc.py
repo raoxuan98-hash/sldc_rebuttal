@@ -61,6 +61,7 @@ if __name__ == '__main__':
     parser.add_argument('--weight_decay', type=float, default=3e-5)
     parser.add_argument('--device', nargs='+', default=['0'])
     parser.add_argument('--lora_rank', type=int, default=4)
+    parser.add_argument('--num_used_layers', type=int, default=1)
     
     # Training parameters
     parser.add_argument('--sce_a', type=float, default=0.5)
@@ -79,6 +80,7 @@ if __name__ == '__main__':
     parser.add_argument('--kd_type', type=str, default='feat')
     parser.add_argument('--only_lora', default=True, action='store_true')
     parser.add_argument('--user', type=str, default='null', choices=['null'])
+    parser.add_argument('--num_workers', type=int, default=4)
 
     parser.add_argument('--use_linear_compensation', type=bool, default=False)
     parser.add_argument('--use_weak_nonlinear_compensation', type=bool, default=True)
@@ -91,6 +93,15 @@ if __name__ == '__main__':
     parser.add_argument('--use_auxiliary_data_enhancement', type=bool, default=True)
     parser.add_argument('--auxiliary_data_path', type=str, default="/data1/open_datasets/ImageNet-2012/train/")
     parser.add_argument('--auxiliary_data_size', type=int, default=1024)
+
+    # Analytic baselines (ACIL / DS-AL)
+    parser.add_argument('--random_feature_dim', type=int, default=8192)
+    parser.add_argument('--ridge_lambda', type=float, default=1e-3)
+    parser.add_argument('--rls_eps', type=float, default=1e-6)
+    parser.add_argument('--acil_activation', type=str, default='gelu')
+    parser.add_argument('--dsal_main_activation', type=str, default='gelu')
+    parser.add_argument('--dsal_comp_activation', type=str, default='tanh')
+    parser.add_argument('--dsal_fusion_weight', type=float, default=1.0)
 
     args = parser.parse_args()
     args = set_smart_defaults(args)  # Apply smart defaults

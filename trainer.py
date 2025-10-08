@@ -14,16 +14,8 @@ def train(args):
     seed_list = copy.deepcopy(args['seed'])
     device = copy.deepcopy(args['device'])
     
-    # Initialize storage for all results
-    all_runs_results = {
-        'original_fc': [],
-        'linear_fc': [],
-        'weak_nonlinear_fc': [],
-        'mlp_fc': [],
-        'linear_fc_aux': [],
-        'weak_nonlinear_fc_aux': [],
-        'mlp_fc_aux': []
-    }
+    # Initialize storage for all results (dynamically populated per model)
+    all_runs_results = {}
     
     for run_id, seed in enumerate(seed_list):
         args['seed'] = seed
@@ -81,12 +73,18 @@ def train(args):
             
         results = train_single_run(args)
         
-        # Store results for all classifier types
-        for classifier in all_runs_results.keys():
+        # Append results for existing classifiers, filling missing entries with None
+        for classifier in list(all_runs_results.keys()):
             if classifier in results:
                 all_runs_results[classifier].append(results[classifier])
             else:
                 all_runs_results[classifier].append(None)
+
+        # Add new classifier keys introduced by this run
+        for classifier, values in results.items():
+            if classifier not in all_runs_results:
+                all_runs_results[classifier] = [None] * run_id
+                all_runs_results[classifier].append(values)
     
         # Calculate and save statistics
         stats = calculate_statistics(all_runs_results)
@@ -137,11 +135,11 @@ def calculate_statistics(all_runs_results):
     stats = {}
     
     for classifier, runs in all_runs_results.items():
-        if not runs or not runs[0]:
+        valid_runs = [run for run in runs if run is not None]
+        if not valid_runs:
             continue
-            
-        # Convert to numpy array for easier calculations
-        num_tasks = len(runs[0])
+
+        num_tasks = len(valid_runs[0])
         num_runs = len(runs)
         
         # Initialize arrays
@@ -151,6 +149,8 @@ def calculate_statistics(all_runs_results):
         for task_idx in range(num_tasks):
             task_values = []
             for run_idx in range(num_runs):
+                if runs[run_idx] is None:
+                    continue
                 if runs[run_idx][task_idx] is not None:
                     task_values.append(runs[run_idx][task_idx])
             
