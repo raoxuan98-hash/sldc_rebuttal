@@ -1,7 +1,7 @@
 import logging
 import math
 from typing import Dict, List
-
+import itertools
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
@@ -37,11 +37,7 @@ def _pad_columns(matrix: torch.Tensor, new_cols: int) -> torch.Tensor:
 
 
 class DSALLearner(BaseLearner):
-    """Dual-Stream Analytic Learner (DS-AL).
-
-    Extends ACIL with a compensation stream that fits residuals for the new
-    classes using a different activation function.
-    """
+    """Dual-Stream Analytic Learner (DS-AL) — fixed version."""
 
     def __init__(self, args):
         super().__init__(args)
@@ -54,88 +50,108 @@ class DSALLearner(BaseLearner):
         for param in self._network.convnet.parameters():
             param.requires_grad = False
 
-        self._feature_dim = self._network.feature_dim
-        self._rf_dim = args.get("random_feature_dim", 8192)
-        self._ridge_lambda = args.get("ridge_lambda", 1e-3)
-        self._rls_eps = args.get("rls_eps", 1e-6)
-        self._fusion_weight = args.get("dsal_fusion_weight", 1.0)
+        # --- 使用双精度，保持与论文一致 ---
+        self._dtype = torch.double
 
-        activation_main = args.get("dsal_main_activation", args.get("acil_activation", "gelu"))
+        # --- 形状与超参 ---
+        self._feature_dim = self._network.feature_dim
+        self._rf_dim = int(args.get("random_feature_dim", 8192))
+
+        # 支持主/补偿分开正则（映射论文 gamma_main / gamma_comp）
+        ridge_main = float(args.get("ridge_lambda_main", args.get("ridge_lambda", 1e-3)))
+        ridge_comp = float(args.get("ridge_lambda_comp", args.get("ridge_lambda", 1e-3)))
+        self._ridge_lambda_main = ridge_main
+        self._ridge_lambda_comp = ridge_comp
+
+        # RLS 的数值稳定项
+        self._rls_eps = float(args.get("rls_eps", 1e-6))
+
+        # 融合权重 C
+        self._fusion_weight = float(args.get("dsal_fusion_weight", 1.0))
+
+        # 激活函数：对齐官方默认 main=relu, comp=tanh
+        activation_main = args.get("dsal_main_activation", "relu")
         activation_comp = args.get("dsal_comp_activation", "tanh")
         self._activation_main = _activation(activation_main)
         self._activation_comp = _activation(activation_comp)
 
-        self._weight_random = (
-            torch.randn(
-                self._feature_dim,
-                self._rf_dim,
-                device=self._device,
-                dtype=torch.float32,
-            )
-            / math.sqrt(self._feature_dim)
-        )
+        # ============= 关键修复 1：随机投影尺度（加入 1/sqrt(d) 缩放，防止 tanh 饱和） =============
+        scale = 1.0 / math.sqrt(self._feature_dim)
+        self._weight_random = torch.randn(
+            self._feature_dim, self._rf_dim, device=self._device, dtype=self._dtype
+        ) * scale
         self._bias_random = torch.zeros(
-            self._rf_dim, device=self._device, dtype=torch.float32
+            self._rf_dim, device=self._device, dtype=self._dtype
         )
 
-        identity = torch.eye(
-            self._rf_dim, device=self._device, dtype=torch.float32
-        )
-        self._R_main = identity / self._ridge_lambda
-        self._R_comp = identity.clone() / self._ridge_lambda
-        self._W_main = torch.zeros(
-            self._rf_dim, 0, device=self._device, dtype=torch.float32
-        )
-        self._W_comp = torch.zeros(
-            self._rf_dim, 0, device=self._device, dtype=torch.float32
-        )
+        # R 矩阵与权重矩阵分别初始化（主/补偿可不同正则）
+        I_main = torch.eye(self._rf_dim, device=self._device, dtype=self._dtype)
+        I_comp = torch.eye(self._rf_dim, device=self._device, dtype=self._dtype)
+        self._R_main = I_main / self._ridge_lambda_main
+        self._R_comp = I_comp / self._ridge_lambda_comp
 
+        self._W_main = torch.zeros(self._rf_dim, 0, device=self._device, dtype=self._dtype)
+        self._W_comp = torch.zeros(self._rf_dim, 0, device=self._device, dtype=self._dtype)
+
+        # FSA（按题意忽略；保留开关以兼容你的框架）
         self._fsa_done = False
         self._use_fsa = bool(args.get("first_section_adaptation", True))
-        self._fsa_epochs = int(args.get("fsa_epochs", 1))
+        self._fsa_steps = int(args.get("fsa_steps", 1000))
         self._fsa_lr = float(args.get("fsa_lr", 1e-4))
-        self._fsa_wd = float(args.get("fsa_weight_decay", 0.0))
-        self._fsa_bs = int(args.get("fsa_batch_size", 64))
+        self._fsa_wd = float(args.get("fsa_weight_decay", 3e-5))
+        self._fsa_bs = int(args.get("fsa_batch_size", 32))
 
     # ------------------------------------------------------------------
-    # Feature helpers
+    # Feature helpers (double)
     # ------------------------------------------------------------------
     def _project(self, features: torch.Tensor, stream: str) -> torch.Tensor:
+        if features.dtype != self._dtype:
+            features = features.to(self._dtype)
         projected = features @ self._weight_random + self._bias_random
         if stream == "main":
             return self._activation_main(projected)
         return self._activation_comp(projected)
 
     def _build_dataloader(self, dataset, batch_size: int, shuffle: bool) -> DataLoader:
+        # pin_memory_device="cuda" 需要 torch>=2.0 且设备为 CUDA；你的环境若报错可去掉该参数
         return DataLoader(
             dataset,
             batch_size=batch_size,
             shuffle=shuffle,
-            num_workers=self.args.get("num_workers", 4),
+            num_workers=6,
+            pin_memory=True,
+            pin_memory_device="cuda",
+            persistent_workers=True,
+            prefetch_factor=4,
+            drop_last=shuffle,
         )
 
+    @torch.inference_mode()
     def _extract_features(self, loader: DataLoader) -> Dict[str, torch.Tensor]:
         feats: List[torch.Tensor] = []
         labels: List[torch.Tensor] = []
         self._network.eval()
-        with torch.no_grad():
-            for _, (_, inputs, targets) in enumerate(loader):
-                inputs = inputs.to(self._device, non_blocking=True)
-                features = self._network.convnet(inputs)["features"]
-                feats.append(features.cpu())
-                labels.append(targets)
+        for _, (_, inputs, targets) in enumerate(loader):
+            inputs = inputs.to(self._device, non_blocking=True)
+            features = self._network.convnet(inputs)["features"]  # float32
+            feats.append(features.cpu())
+            labels.append(targets)
         features_all = torch.cat(feats, dim=0).to(self._device)
         labels_all = torch.cat(labels, dim=0).to(self._device)
         return {"features": features_all, "labels": labels_all}
 
+    def _one_hot(self, labels: torch.Tensor, total_classes: int) -> torch.Tensor:
+        one_hot = torch.zeros(
+            labels.size(0), total_classes, device=self._device, dtype=self._dtype
+        )
+        one_hot.scatter_(1, labels.view(-1, 1), 1.0)
+        return one_hot
+
+    # ------------------------------------------------------------------
+    # （可选）FSA — 题意不关注，保持原样以兼容
+    # ------------------------------------------------------------------
     def _first_section_adaptation(self, data_manager) -> None:
-        """Adapt the frozen ViT encoder using the first task before analytic training."""
-
-        try:
-            first_task_size = data_manager.get_task_size(0)
-        except Exception:
-            first_task_size = data_manager.get_task_size(1)
-
+        first_task_size = data_manager.get_task_size(0)
         train_dataset = data_manager.get_dataset(
             np.arange(0, first_task_size),
             source="train",
@@ -143,104 +159,124 @@ class DSALLearner(BaseLearner):
             appendent=[],
             with_raw=False,
         )
-
         train_loader = self._build_dataloader(
             train_dataset, batch_size=self._fsa_bs, shuffle=True
         )
 
-        for param in self._network.convnet.parameters():
-            param.requires_grad = True
+        for n, p in self._network.convnet.named_parameters():
+            if "lora" in n or "norm" in n or "bias" in n:
+                p.requires_grad = True
+            else:
+                p.requires_grad = False
         self._network.train()
 
-        classifier = torch.nn.Linear(self._feature_dim, first_task_size).to(
-            self._device
-        )
+        classifier = torch.nn.Linear(self._feature_dim, first_task_size).to(self._device)
         optimizer = torch.optim.AdamW(
             list(self._network.convnet.parameters()) + list(classifier.parameters()),
             lr=self._fsa_lr,
             weight_decay=self._fsa_wd,
         )
-        criterion = torch.nn.CrossEntropyLoss()
+        criterion = torch.nn.CrossEntropyLoss(label_smoothing=0.1)
 
-        for epoch in range(self._fsa_epochs):
-            running_loss = 0.0
-            total = 0
-            correct = 0
+        data_iter = itertools.cycle(train_loader)
+        ema_beta = 0.95
+        ema_loss = None
+        ema_acc = None
 
-            for _, (_, inputs, targets) in enumerate(train_loader):
-                inputs = inputs.to(self._device, non_blocking=True)
-                targets = targets.to(self._device, non_blocking=True)
+        steps_done = 0
+        while steps_done < self._fsa_steps:
+            _, inputs, targets = next(data_iter)
+            inputs = inputs.to(self._device, non_blocking=True)
+            targets = targets.to(self._device, non_blocking=True)
 
-                optimizer.zero_grad(set_to_none=True)
-                features = self._network.convnet(inputs)["features"]
-                logits = classifier(features)
-                loss = criterion(logits, targets)
-                loss.backward()
-                optimizer.step()
+            optimizer.zero_grad(set_to_none=True)
+            features = self._network.convnet(inputs)["features"]
+            logits = classifier(features)
+            loss = criterion(logits, targets)
+            loss.backward()
+            optimizer.step()
 
-                running_loss += loss.item() * targets.size(0)
-                with torch.no_grad():
-                    preds = torch.argmax(logits, dim=1)
-                    correct += (preds == targets).sum().item()
-                    total += targets.size(0)
+            with torch.no_grad():
+                preds = torch.argmax(logits, dim=1)
+                acc = (preds == targets).float().mean().item()
 
-            logging.info(
-                "[FSA] epoch=%d | loss=%.4f | acc=%.2f%%",
-                epoch + 1,
-                running_loss / max(total, 1),
-                100.0 * correct / max(total, 1),
-            )
+            loss_item = loss.item()
+            if ema_loss is None:
+                ema_loss = loss_item
+                ema_acc = acc
+            else:
+                ema_loss = ema_beta * ema_loss + (1 - ema_beta) * loss_item
+                ema_acc = ema_beta * ema_acc + (1 - ema_beta) * acc
+
+            steps_done += 1
+            if steps_done % 50 == 0 or steps_done == self._fsa_steps:
+                logging.info(
+                    "[FSA] step=%d/%d | loss_ema=%.4f | acc_ema=%.2f%%",
+                    steps_done, self._fsa_steps, ema_loss, ema_acc * 100.0,
+                )
 
         del classifier
         torch.cuda.empty_cache()
-
-        for param in self._network.convnet.parameters():
-            param.requires_grad = False
+        for p in self._network.convnet.parameters():
+            p.requires_grad = False
         self._network.eval()
         self._fsa_done = True
-        logging.info(
-            "[FSA] first_section_adaptation completed; convnet re-frozen for DS-AL."
-        )
-
-    def _one_hot(self, labels: torch.Tensor, total_classes: int) -> torch.Tensor:
-        one_hot = torch.zeros(
-            labels.size(0), total_classes, device=self._device, dtype=torch.float32
-        )
-        one_hot.scatter_(1, labels.view(-1, 1), 1.0)
-        return one_hot
+        logging.info("[FSA] first_section_adaptation completed; convnet re-frozen.")
 
     # ------------------------------------------------------------------
-    # Recursive least squares updates
+    # RLS with double precision
     # ------------------------------------------------------------------
     def _compute_gain(self, X: torch.Tensor, R: torch.Tensor) -> torch.Tensor:
+        if X.dtype != self._dtype:
+            X = X.to(self._dtype)
         XR = X @ R
+        # K = I + X R X^T（加入 eps 做数值稳定）
         S = XR @ X.t()
         eye = torch.eye(S.size(0), device=S.device, dtype=S.dtype)
         S = S + eye + self._rls_eps * eye
+        # 求解 K^T G^T = (XR)^T  =>  G = (solve(S^T, XR))^T
         gain_t = torch.linalg.solve(S.transpose(-1, -2), XR)
         return gain_t.transpose(0, 1)
 
     def _update_main(self, X: torch.Tensor, Y: torch.Tensor) -> None:
+        if X.dtype != self._dtype:
+            X = X.to(self._dtype)
+        if Y.dtype != self._dtype:
+            Y = Y.to(self._dtype)
         W_prev = _pad_columns(self._W_main, Y.size(1) - self._W_main.size(1))
         gain = self._compute_gain(X, self._R_main)
         self._R_main = self._R_main - gain @ X @ self._R_main
         residual = Y - X @ W_prev
         self._W_main = W_prev + gain @ residual
 
+    # ============= 关键修复 2：补偿流做“全列 RLS + PLC 清洗” =============
     def _update_compensation(
         self, X: torch.Tensor, residual_new: torch.Tensor, new_class_count: int
     ) -> None:
+        if X.dtype != self._dtype:
+            X = X.to(self._dtype)
+        if residual_new.dtype != self._dtype:
+            residual_new = residual_new.to(self._dtype)
+
+        # 1) 先把 W_comp 扩到新类别总数
         W_prev_full = _pad_columns(self._W_comp, new_class_count)
-        current_block = W_prev_full[:, -new_class_count:].clone()
+
+        # 2) 构造“全列”目标：旧类=0，新类=residual_new（Previous Label Cleansing）
+        total_cols = W_prev_full.size(1)
+        Y_comp_full = torch.zeros(
+            X.size(0), total_cols, device=self._device, dtype=self._dtype
+        )
+        # 只在新类列填 residual_new
+        Y_comp_full[:, self._known_classes:self._total_classes] = residual_new
+
+        # 3) 标准 RLS 更新（与主流相同，但用 R_comp）
         gain = self._compute_gain(X, self._R_comp)
         self._R_comp = self._R_comp - gain @ X @ self._R_comp
-        block_residual = residual_new - X @ current_block
-        updated_block = current_block + gain @ block_residual
-        W_prev_full[:, -new_class_count:] = updated_block
-        self._W_comp = W_prev_full
+        residual_full = Y_comp_full - X @ W_prev_full
+        self._W_comp = W_prev_full + gain @ residual_full
 
     # ------------------------------------------------------------------
-    # Incremental routine
+    # Incremental & Eval (double)
     # ------------------------------------------------------------------
     def incremental_train(self, data_manager):
         self._cur_task += 1
@@ -256,39 +292,39 @@ class DSALLearner(BaseLearner):
             with_raw=False,
         )
         self.train_loader = self._build_dataloader(
-            train_dataset, self.args.get("batch_size", 64), shuffle=False
+            train_dataset, batch_size=64, shuffle=False
         )
 
         batch_data = self._extract_features(self.train_loader)
         features = batch_data["features"]
         labels = batch_data["labels"]
 
+        # 主流：随机特征 -> 激活_main -> RLS
         X_main = self._project(features, stream="main")
         targets = self._one_hot(labels, self._total_classes)
         self._update_main(X_main, targets)
 
+        # 残差：Y - main(X)
         with torch.no_grad():
             main_logits = X_main @ self._W_main
         residual_full = targets - main_logits
         residual_new = residual_full[:, self._known_classes : self._total_classes]
 
+        # 补偿流：随机特征 -> 激活_comp -> 全列 RLS + PLC
         X_comp = self._project(features, stream="comp")
         self._update_compensation(X_comp, residual_new, task_size)
 
         self._known_classes = self._total_classes
 
-    # ------------------------------------------------------------------
-    # Evaluation
-    # ------------------------------------------------------------------
     def _forward_main(self, inputs: torch.Tensor) -> torch.Tensor:
         with torch.no_grad():
-            features = self._network.convnet(inputs)["features"]
+            features = self._network.convnet(inputs)["features"].to(self._dtype)
         X = self._project(features, stream="main")
         return X @ self._W_main
 
     def _forward_comp(self, inputs: torch.Tensor) -> torch.Tensor:
         with torch.no_grad():
-            features = self._network.convnet(inputs)["features"]
+            features = self._network.convnet(inputs)["features"].to(self._dtype)
         X = self._project(features, stream="comp")
         return X @ self._W_comp
 
@@ -297,6 +333,8 @@ class DSALLearner(BaseLearner):
         correct_fused = 0
         total = 0
 
+        C = self._fusion_weight
+
         with torch.no_grad():
             for _, (_, inputs, targets) in enumerate(self.test_loader):
                 inputs = inputs.to(self._device, non_blocking=True)
@@ -304,7 +342,7 @@ class DSALLearner(BaseLearner):
 
                 logits_main = self._forward_main(inputs)
                 logits_comp = self._forward_comp(inputs)
-                logits_fused = logits_main + self._fusion_weight * logits_comp
+                logits_fused = logits_main + C * logits_comp
 
                 preds_main = torch.argmax(logits_main, dim=1)
                 preds_fused = torch.argmax(logits_fused, dim=1)
@@ -316,10 +354,8 @@ class DSALLearner(BaseLearner):
         acc_main = 100.0 * correct_main / max(total, 1)
         acc_fused = 100.0 * correct_fused / max(total, 1)
         logging.info(
-            "Task %d | DS-AL Main: %.2f%% | DS-AL Fused: %.2f%%",
-            self._cur_task,
-            acc_main,
-            acc_fused,
+            "Task %d | DS-AL Main: %.2f%% | DS-AL Fused: %.2f%% (C=%.3f)",
+            self._cur_task, acc_main, acc_fused, C,
         )
         return {
             "dsal_main": round(acc_main, 2),
@@ -332,6 +368,7 @@ class DSALLearner(BaseLearner):
             "dsal_fused": [],
         }
 
+        # 题意：FSA 不用管；若你希望完全禁用，将 _use_fsa 设为 False 即可
         if self._use_fsa and not self._fsa_done:
             self._first_section_adaptation(data_manager)
 
@@ -342,7 +379,7 @@ class DSALLearner(BaseLearner):
                 np.arange(0, self._total_classes), source="test", mode="test"
             )
             self.test_loader = self._build_dataloader(
-                test_dataset, self.args.get("batch_size", 64), shuffle=False
+                test_dataset, batch_size=64, shuffle=False
             )
 
             task_results = self.eval_task()

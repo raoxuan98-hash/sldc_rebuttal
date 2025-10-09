@@ -10,39 +10,20 @@ def main(args):
     else:
         train(args)
 
-
-def set_smart_defaults(args):
-    if args.smart_defaults:
-        if args.dataset == 'cars196_224':
-            args.init_cls = 20
-            args.increment = 20
-            args.epochs = 15
-        elif args.dataset == 'imagenet-r':
-            args.init_cls = 20
-            args.increment = 20
-            args.epochs = 10
-        elif args.dataset == 'cifar100_224':
-            args.init_cls = 10
-            args.increment = 10
-            args.epochs = 5
-        elif args.dataset == 'cub200_224':
-            args.init_cls = 20
-            args.increment = 20
-            args.epochs = 15
-    return args
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='ACIL / DS-AL experiments unified management.'
     )
+
+    import os
+    os.environ['CUDA_VISIBLE_DEVICES'] = '1' 
 
     # Basic options
     parser.add_argument('--test_only', default=False, action='store_true')
     parser.add_argument(
         '--dataset',
         type=str,
-        default='imagenet-r',
+        default='cifar100_224',
         choices=['imagenet-r', 'cifar100_224', 'cub200_224', 'cars196_224'],
         help='Dataset to use',
     )
@@ -61,14 +42,15 @@ if __name__ == '__main__':
 
     # Model parameters
     parser.add_argument(
-        '--model_name', type=str, default='acil', choices=['acil', 'dsal']
+        '--model_name', type=str, default='dsal', choices=['acil', 'dsal']
     )
     parser.add_argument(
         '--vit_type',
         type=str,
         default='vit-b-p16-mocov3',
-        choices=['vit-b-p16-lora-mocov3', 'vit-b-p16-lora', 'vit-b-p16-lora-mae'],
+        choices=['vit-b-p16-lora-mocov3', 'vit-b-p16-lora', 'vit-b-p16-lora-mae']
     )
+
     parser.add_argument(
         '--lora_type', type=str, default='basic_lora', choices=['full', 'basic_lora']
     )
@@ -80,7 +62,7 @@ if __name__ == '__main__':
     # Training parameters (mainly for logging consistency)
     parser.add_argument('--sce_a', type=float, default=0.5)
     parser.add_argument('--sce_b', type=float, default=0.5)
-    parser.add_argument('--seed', nargs='+', type=int, default=[1990, 1996, 1997])
+    parser.add_argument('--seed', nargs='+', type=int, default=[1993, 1996, 1997])
     parser.add_argument('--epochs', type=int, default=1)
     parser.add_argument('--ca_epochs', type=int, default=5)
     parser.add_argument('--optimizer', type=str, default='adamw')
@@ -104,7 +86,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--acil_activation',
         type=str,
-        default='gelu',
+        default='relu',
         choices=['relu', 'gelu', 'tanh', 'mish'],
     )
     parser.add_argument(
@@ -125,19 +107,21 @@ if __name__ == '__main__':
     parser.add_argument(
         '--first_section_adaptation',
         dest='first_section_adaptation',
-        action='store_true',
+        type=bool,
+        default=True
     )
+
     parser.add_argument(
         '--no_first_section_adaptation',
         dest='first_section_adaptation',
         action='store_false',
     )
+
     parser.set_defaults(first_section_adaptation=True)
-    parser.add_argument('--fsa_epochs', type=int, default=1)
+    parser.add_argument('--fsa_steps', type=int, default=1000)
     parser.add_argument('--fsa_lr', type=float, default=1e-4)
     parser.add_argument('--fsa_weight_decay', type=float, default=0.0)
-    parser.add_argument('--fsa_batch_size', type=int, default=64)
+    parser.add_argument('--fsa_batch_size', type=int, default=32)
 
     args = parser.parse_args()
-    args = set_smart_defaults(args)
     main(args)

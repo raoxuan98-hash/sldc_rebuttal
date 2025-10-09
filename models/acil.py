@@ -1,7 +1,7 @@
 import logging
 import math
 from typing import Dict, List
-
+import itertools
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
@@ -79,7 +79,7 @@ class ACILLearner(BaseLearner):
 
         self._fsa_done = False
         self._use_fsa = bool(args.get("first_section_adaptation", True))
-        self._fsa_epochs = int(args.get("fsa_epochs", 1))
+        self._fsa_steps = int(args.get("fsa_steps", 1000))
         self._fsa_lr = float(args.get("fsa_lr", 1e-4))
         self._fsa_wd = float(args.get("fsa_weight_decay", 0.0))
         self._fsa_bs = int(args.get("fsa_batch_size", 64))
@@ -211,17 +211,14 @@ class ACILLearner(BaseLearner):
         )
         return {"acil": round(accuracy, 2)}
 
+
     def _first_section_adaptation(self, data_manager):
         """
         用第一个任务的数据对 convnet 做短暂监督微调，适配数据分布。
         仅执行一次；不会改 ACIL 的解析头与随机特征。
+        改为按固定优化步数训练，并使用指数滑动平均（EMA）记录指标。
         """
-        # 推断第一个任务的类别范围
-        try:
-            first_task_size = data_manager.get_task_size(0)  # 常见实现：0-based
-        except Exception:
-            # 若实现是 1-based，则回退到 1
-            first_task_size = data_manager.get_task_size(1)
+        first_task_size = data_manager.get_task_size(0)
 
         train_dataset = data_manager.get_dataset(
             np.arange(0, first_task_size),
@@ -230,62 +227,82 @@ class ACILLearner(BaseLearner):
             appendent=[],
             with_raw=False,
         )
-        # 使用独立 batch_size，避免影响后续 ACIL 的 loader 配置
         train_loader = self._build_dataloader(
-            train_dataset, batch_size=self._fsa_bs, shuffle=True
+            train_dataset, batch_size=32, shuffle=True
         )
 
-        # 暂时解冻 convnet
-        for p in self._network.convnet.parameters():
-            p.requires_grad = True
+        # 解冻部分参数
+        for n, p in self._network.convnet.named_parameters():
+            if "lora" in n or "norm" in n or "bias" in n:
+                p.requires_grad = True
+            else:
+                p.requires_grad = False
         self._network.train()
 
-        # 临时线性分类头（float32 即可）
+        # 临时分类头
         clf = torch.nn.Linear(self._feature_dim, first_task_size).to(self._device)
         optimizer = torch.optim.AdamW(
             list(self._network.convnet.parameters()) + list(clf.parameters()),
             lr=self._fsa_lr,
-            weight_decay=self._fsa_wd,
+            weight_decay=3e-5,
         )
-        criterion = torch.nn.CrossEntropyLoss()
+        criterion = torch.nn.CrossEntropyLoss(label_smoothing=0.1)
+        data_iter = itertools.cycle(train_loader)
 
-        for epoch in range(self._fsa_epochs):
-            running_loss = 0.0
-            total, correct = 0, 0
-            for _, (_, inputs, targets) in enumerate(train_loader):
-                inputs = inputs.to(self._device, non_blocking=True)
-                targets = targets.to(self._device, non_blocking=True)
+        # EMA 参数（可调）
+        ema_beta = 0.95  # 越接近1，平滑越强
+        ema_loss = None
+        ema_acc = None
 
-                optimizer.zero_grad(set_to_none=True)
-                # 训练态提特征（float32 参与反传）
-                feats = self._network.convnet(inputs)["features"]  # (N, d), float32
-                logits = clf(feats)
-                loss = criterion(logits, targets)
-                loss.backward()
-                optimizer.step()
+        steps_done = 0
+        while steps_done < self._fsa_steps:
+            _, inputs, targets = next(data_iter)
+            inputs = inputs.to(self._device, non_blocking=True)
+            targets = targets.to(self._device, non_blocking=True)
 
-                running_loss += loss.item() * targets.size(0)
-                with torch.no_grad():
-                    preds = torch.argmax(logits, dim=1)
-                    correct += (preds == targets).sum().item()
-                    total += targets.size(0)
+            optimizer.zero_grad(set_to_none=True)
+            feats = self._network.convnet(inputs)["features"]
+            logits = clf(feats)
+            loss = criterion(logits, targets)
+            loss.backward()
+            optimizer.step()
 
-            logging.info(
-                "[FSA] epoch=%d | loss=%.4f | acc=%.2f%%",
-                epoch + 1,
-                running_loss / max(total, 1),
-                100.0 * correct / max(total, 1),
-            )
+            # 计算当前 batch 的准确率
+            with torch.no_grad():
+                preds = torch.argmax(logits, dim=1)
+                acc = (preds == targets).float().mean().item()
 
-        # 丢弃临时头、冻结 & 切回 eval
+            loss_item = loss.item()
+
+            # 更新 EMA
+            if ema_loss is None:
+                ema_loss = loss_item
+                ema_acc = acc
+            else:
+                ema_loss = ema_beta * ema_loss + (1 - ema_beta) * loss_item
+                ema_acc = ema_beta * ema_acc + (1 - ema_beta) * acc
+
+            steps_done += 1
+
+            # 每 N 步或最后一步输出日志
+            if steps_done % 50 == 0 or steps_done == self._fsa_steps:
+                logging.info(
+                    "[FSA] step=%d/%d | loss_ema=%.4f | acc_ema=%.2f%%",
+                    steps_done,
+                    self._fsa_steps,
+                    ema_loss,
+                    ema_acc * 100.0,
+                )
+
+        # 清理 & 冻结
         del clf
         torch.cuda.empty_cache()
         for p in self._network.convnet.parameters():
             p.requires_grad = False
         self._network.eval()
         self._fsa_done = True
-        logging.info("[FSA] first_section_adaptation 完成，convnet 已重新冻结。")
-
+        logging.info("[FSA] first_section_adaptation 完成（%d steps），convnet 已重新冻结。", self._fsa_steps)
+        
     def loop(self, data_manager):
         # 🔧 在进入增量循环前做一次首任务自适应
         if self._use_fsa and not self._fsa_done:

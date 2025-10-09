@@ -1,0 +1,565 @@
+2025-10-09 13:24:49,287 [trainer.py] => test_only: False
+2025-10-09 13:24:49,288 [trainer.py] => dataset: cifar100_224
+2025-10-09 13:24:49,288 [trainer.py] => smart_defaults: False
+2025-10-09 13:24:49,288 [trainer.py] => prefix: original
+2025-10-09 13:24:49,288 [trainer.py] => memory_size: 0
+2025-10-09 13:24:49,288 [trainer.py] => memory_per_class: 0
+2025-10-09 13:24:49,288 [trainer.py] => fixed_memory: False
+2025-10-09 13:24:49,288 [trainer.py] => shuffle: True
+2025-10-09 13:24:49,288 [trainer.py] => init_cls: 20
+2025-10-09 13:24:49,288 [trainer.py] => increment: 20
+2025-10-09 13:24:49,288 [trainer.py] => model_name: dsal
+2025-10-09 13:24:49,288 [trainer.py] => vit_type: vit-b-p16-mocov3
+2025-10-09 13:24:49,288 [trainer.py] => lora_type: basic_lora
+2025-10-09 13:24:49,288 [trainer.py] => weight_decay: 3e-05
+2025-10-09 13:24:49,288 [trainer.py] => device: [device(type='cuda', index=0)]
+2025-10-09 13:24:49,288 [trainer.py] => lora_rank: 4
+2025-10-09 13:24:49,288 [trainer.py] => num_used_layers: 1
+2025-10-09 13:24:49,288 [trainer.py] => sce_a: 0.5
+2025-10-09 13:24:49,288 [trainer.py] => sce_b: 0.5
+2025-10-09 13:24:49,288 [trainer.py] => seed: 1993
+2025-10-09 13:24:49,288 [trainer.py] => epochs: 1
+2025-10-09 13:24:49,288 [trainer.py] => ca_epochs: 5
+2025-10-09 13:24:49,288 [trainer.py] => optimizer: adamw
+2025-10-09 13:24:49,288 [trainer.py] => lrate: 0.0001
+2025-10-09 13:24:49,288 [trainer.py] => head_scale: 10.0
+2025-10-09 13:24:49,288 [trainer.py] => batch_size: 64
+2025-10-09 13:24:49,288 [trainer.py] => tune_classifier: True
+2025-10-09 13:24:49,288 [trainer.py] => gamma_norm: 0.1
+2025-10-09 13:24:49,288 [trainer.py] => gamma_kd: 1.0
+2025-10-09 13:24:49,288 [trainer.py] => kd_type: feat
+2025-10-09 13:24:49,288 [trainer.py] => only_lora: True
+2025-10-09 13:24:49,288 [trainer.py] => user: null
+2025-10-09 13:24:49,289 [trainer.py] => num_workers: 4
+2025-10-09 13:24:49,289 [trainer.py] => gamma_2: 0.5
+2025-10-09 13:24:49,289 [trainer.py] => alpha_t: 1.0
+2025-10-09 13:24:49,289 [trainer.py] => random_feature_dim: 8192
+2025-10-09 13:24:49,289 [trainer.py] => ridge_lambda: 0.001
+2025-10-09 13:24:49,289 [trainer.py] => rls_eps: 1e-06
+2025-10-09 13:24:49,289 [trainer.py] => acil_activation: gelu
+2025-10-09 13:24:49,289 [trainer.py] => dsal_main_activation: relu
+2025-10-09 13:24:49,289 [trainer.py] => dsal_comp_activation: tanh
+2025-10-09 13:24:49,289 [trainer.py] => dsal_fusion_weight: 1.0
+2025-10-09 13:24:49,289 [trainer.py] => first_section_adaptation: True
+2025-10-09 13:24:49,289 [trainer.py] => fsa_steps: 50
+2025-10-09 13:24:49,289 [trainer.py] => fsa_lr: 0.0001
+2025-10-09 13:24:49,289 [trainer.py] => fsa_weight_decay: 0.0
+2025-10-09 13:24:49,289 [trainer.py] => fsa_batch_size: 32
+2025-10-09 13:24:49,289 [trainer.py] => run_id: 0
+2025-10-09 13:24:49,289 [trainer.py] => log_path: dsal_0624_logs_null/cifar100_224_vit-b-p16-mocov3/init-20_inc-20_optim-adamw_lr-0.0001_kd-1.0_norm-0.1_type-feat_tem-1.0_gamma_2-0.5_bz-64_epoch-1_seed-1993_onlylora
+2025-10-09 13:24:51,115 [data_manager.py] => [68, 56, 78, 8, 23, 84, 90, 65, 74, 76, 40, 89, 3, 92, 55, 9, 26, 80, 43, 38, 58, 70, 77, 1, 85, 19, 17, 50, 28, 53, 13, 81, 45, 82, 6, 59, 83, 16, 15, 44, 91, 41, 72, 60, 79, 52, 20, 10, 31, 54, 37, 95, 14, 71, 96, 98, 97, 2, 64, 66, 42, 22, 35, 86, 24, 34, 87, 21, 99, 0, 88, 27, 18, 94, 11, 12, 47, 25, 30, 46, 62, 69, 36, 61, 7, 63, 75, 5, 32, 4, 51, 48, 73, 93, 39, 67, 29, 49, 57, 33]
+2025-10-09 13:25:06,975 [trainer.py] => All params: 86388480
+2025-10-09 13:25:06,976 [trainer.py] => Trainable params: 0
+2025-10-09 13:25:14,812 [dsal.py] => [FSA] step=50/50 | loss_ema=2.8295 | acc_ema=43.93%
+2025-10-09 13:25:14,853 [dsal.py] => [FSA] first_section_adaptation completed (50 steps); convnet re-frozen.
+2025-10-09 13:25:48,744 [dsal.py] => Task 0 | DS-AL Main: 71.10% | DS-AL Fused: 65.60%
+2025-10-09 13:26:27,814 [dsal.py] => Task 1 | DS-AL Main: 84.90% | DS-AL Fused: 77.33%
+2025-10-09 13:27:12,735 [dsal.py] => Task 2 | DS-AL Main: 83.43% | DS-AL Fused: 74.02%
+2025-10-09 13:28:03,520 [dsal.py] => Task 3 | DS-AL Main: 80.61% | DS-AL Fused: 69.58%
+2025-10-09 13:29:00,202 [dsal.py] => Task 4 | DS-AL Main: 78.26% | DS-AL Fused: 66.03%
+2025-10-09 13:29:00,393 [trainer.py] => 
+Results Summary:
+2025-10-09 13:29:00,394 [trainer.py] => 
+Classifier: dsal_main
+Task 1: Mean = 71.10%, Std = 0.00
+Task 2: Mean = 84.90%, Std = 0.00
+Task 3: Mean = 83.43%, Std = 0.00
+Task 4: Mean = 80.61%, Std = 0.00
+Task 5: Mean = 78.26%, Std = 0.00
+
+Classifier: dsal_fused
+Task 1: Mean = 65.60%, Std = 0.00
+Task 2: Mean = 77.33%, Std = 0.00
+Task 3: Mean = 74.02%, Std = 0.00
+Task 4: Mean = 69.58%, Std = 0.00
+Task 5: Mean = 66.03%, Std = 0.00
+2025-10-09 13:29:00,395 [trainer.py] => test_only: False
+2025-10-09 13:29:00,395 [trainer.py] => dataset: cifar100_224
+2025-10-09 13:29:00,395 [trainer.py] => smart_defaults: False
+2025-10-09 13:29:00,395 [trainer.py] => prefix: original
+2025-10-09 13:29:00,395 [trainer.py] => memory_size: 0
+2025-10-09 13:29:00,395 [trainer.py] => memory_per_class: 0
+2025-10-09 13:29:00,395 [trainer.py] => fixed_memory: False
+2025-10-09 13:29:00,396 [trainer.py] => shuffle: True
+2025-10-09 13:29:00,396 [trainer.py] => init_cls: 20
+2025-10-09 13:29:00,396 [trainer.py] => increment: 20
+2025-10-09 13:29:00,396 [trainer.py] => model_name: dsal
+2025-10-09 13:29:00,396 [trainer.py] => vit_type: vit-b-p16-mocov3
+2025-10-09 13:29:00,396 [trainer.py] => lora_type: basic_lora
+2025-10-09 13:29:00,396 [trainer.py] => weight_decay: 3e-05
+2025-10-09 13:29:00,396 [trainer.py] => device: [device(type='cuda', index=0)]
+2025-10-09 13:29:00,396 [trainer.py] => lora_rank: 4
+2025-10-09 13:29:00,396 [trainer.py] => num_used_layers: 1
+2025-10-09 13:29:00,396 [trainer.py] => sce_a: 0.5
+2025-10-09 13:29:00,396 [trainer.py] => sce_b: 0.5
+2025-10-09 13:29:00,396 [trainer.py] => seed: 1996
+2025-10-09 13:29:00,396 [trainer.py] => epochs: 1
+2025-10-09 13:29:00,396 [trainer.py] => ca_epochs: 5
+2025-10-09 13:29:00,396 [trainer.py] => optimizer: adamw
+2025-10-09 13:29:00,396 [trainer.py] => lrate: 0.0001
+2025-10-09 13:29:00,396 [trainer.py] => head_scale: 10.0
+2025-10-09 13:29:00,396 [trainer.py] => batch_size: 64
+2025-10-09 13:29:00,396 [trainer.py] => tune_classifier: True
+2025-10-09 13:29:00,396 [trainer.py] => gamma_norm: 0.1
+2025-10-09 13:29:00,396 [trainer.py] => gamma_kd: 1.0
+2025-10-09 13:29:00,396 [trainer.py] => kd_type: feat
+2025-10-09 13:29:00,396 [trainer.py] => only_lora: True
+2025-10-09 13:29:00,397 [trainer.py] => user: null
+2025-10-09 13:29:00,397 [trainer.py] => num_workers: 4
+2025-10-09 13:29:00,397 [trainer.py] => gamma_2: 0.5
+2025-10-09 13:29:00,397 [trainer.py] => alpha_t: 1.0
+2025-10-09 13:29:00,397 [trainer.py] => random_feature_dim: 8192
+2025-10-09 13:29:00,397 [trainer.py] => ridge_lambda: 0.001
+2025-10-09 13:29:00,397 [trainer.py] => rls_eps: 1e-06
+2025-10-09 13:29:00,397 [trainer.py] => acil_activation: gelu
+2025-10-09 13:29:00,397 [trainer.py] => dsal_main_activation: relu
+2025-10-09 13:29:00,397 [trainer.py] => dsal_comp_activation: tanh
+2025-10-09 13:29:00,397 [trainer.py] => dsal_fusion_weight: 1.0
+2025-10-09 13:29:00,397 [trainer.py] => first_section_adaptation: True
+2025-10-09 13:29:00,397 [trainer.py] => fsa_steps: 50
+2025-10-09 13:29:00,397 [trainer.py] => fsa_lr: 0.0001
+2025-10-09 13:29:00,397 [trainer.py] => fsa_weight_decay: 0.0
+2025-10-09 13:29:00,397 [trainer.py] => fsa_batch_size: 32
+2025-10-09 13:29:00,397 [trainer.py] => run_id: 1
+2025-10-09 13:29:00,397 [trainer.py] => log_path: dsal_0624_logs_null/cifar100_224_vit-b-p16-mocov3/init-20_inc-20_optim-adamw_lr-0.0001_kd-1.0_norm-0.1_type-feat_tem-1.0_gamma_2-0.5_bz-64_epoch-1_seed-1996_onlylora
+2025-10-09 13:29:02,212 [data_manager.py] => [35, 18, 40, 85, 63, 62, 77, 73, 12, 44, 31, 26, 78, 33, 9, 86, 92, 87, 93, 71, 45, 7, 17, 6, 24, 21, 27, 99, 81, 2, 94, 57, 13, 30, 8, 55, 76, 46, 49, 47, 60, 36, 16, 43, 54, 83, 88, 51, 15, 20, 53, 66, 50, 3, 98, 90, 80, 5, 32, 75, 89, 10, 82, 64, 29, 70, 91, 52, 95, 23, 69, 56, 96, 68, 39, 42, 19, 0, 22, 72, 65, 61, 74, 59, 25, 37, 48, 84, 34, 28, 4, 11, 14, 79, 97, 41, 38, 67, 1, 58]
+2025-10-09 13:29:16,373 [trainer.py] => All params: 86388480
+2025-10-09 13:29:16,373 [trainer.py] => Trainable params: 0
+2025-10-09 13:29:23,237 [dsal.py] => [FSA] step=50/50 | loss_ema=2.8246 | acc_ema=42.12%
+2025-10-09 13:29:23,253 [dsal.py] => [FSA] first_section_adaptation completed (50 steps); convnet re-frozen.
+2025-10-09 13:29:56,920 [dsal.py] => Task 0 | DS-AL Main: 74.00% | DS-AL Fused: 70.05%
+2025-10-09 13:30:36,227 [dsal.py] => Task 1 | DS-AL Main: 83.47% | DS-AL Fused: 79.10%
+2025-10-09 13:52:44,788 [trainer.py] => test_only: False
+2025-10-09 13:52:44,788 [trainer.py] => dataset: cifar100_224
+2025-10-09 13:52:44,788 [trainer.py] => smart_defaults: False
+2025-10-09 13:52:44,788 [trainer.py] => prefix: original
+2025-10-09 13:52:44,788 [trainer.py] => memory_size: 0
+2025-10-09 13:52:44,788 [trainer.py] => memory_per_class: 0
+2025-10-09 13:52:44,789 [trainer.py] => fixed_memory: False
+2025-10-09 13:52:44,789 [trainer.py] => shuffle: True
+2025-10-09 13:52:44,789 [trainer.py] => init_cls: 20
+2025-10-09 13:52:44,789 [trainer.py] => increment: 20
+2025-10-09 13:52:44,789 [trainer.py] => model_name: dsal
+2025-10-09 13:52:44,789 [trainer.py] => vit_type: vit-b-p16-mocov3
+2025-10-09 13:52:44,789 [trainer.py] => lora_type: basic_lora
+2025-10-09 13:52:44,789 [trainer.py] => weight_decay: 3e-05
+2025-10-09 13:52:44,789 [trainer.py] => device: [device(type='cuda', index=0)]
+2025-10-09 13:52:44,789 [trainer.py] => lora_rank: 4
+2025-10-09 13:52:44,789 [trainer.py] => num_used_layers: 1
+2025-10-09 13:52:44,789 [trainer.py] => sce_a: 0.5
+2025-10-09 13:52:44,789 [trainer.py] => sce_b: 0.5
+2025-10-09 13:52:44,789 [trainer.py] => seed: 1993
+2025-10-09 13:52:44,789 [trainer.py] => epochs: 1
+2025-10-09 13:52:44,789 [trainer.py] => ca_epochs: 5
+2025-10-09 13:52:44,789 [trainer.py] => optimizer: adamw
+2025-10-09 13:52:44,789 [trainer.py] => lrate: 0.0001
+2025-10-09 13:52:44,789 [trainer.py] => head_scale: 10.0
+2025-10-09 13:52:44,789 [trainer.py] => batch_size: 64
+2025-10-09 13:52:44,789 [trainer.py] => tune_classifier: True
+2025-10-09 13:52:44,789 [trainer.py] => gamma_norm: 0.1
+2025-10-09 13:52:44,789 [trainer.py] => gamma_kd: 1.0
+2025-10-09 13:52:44,789 [trainer.py] => kd_type: feat
+2025-10-09 13:52:44,789 [trainer.py] => only_lora: True
+2025-10-09 13:52:44,789 [trainer.py] => user: null
+2025-10-09 13:52:44,789 [trainer.py] => num_workers: 4
+2025-10-09 13:52:44,789 [trainer.py] => gamma_2: 0.5
+2025-10-09 13:52:44,790 [trainer.py] => alpha_t: 1.0
+2025-10-09 13:52:44,790 [trainer.py] => random_feature_dim: 8192
+2025-10-09 13:52:44,790 [trainer.py] => ridge_lambda: 0.001
+2025-10-09 13:52:44,790 [trainer.py] => rls_eps: 1e-06
+2025-10-09 13:52:44,790 [trainer.py] => acil_activation: relu
+2025-10-09 13:52:44,790 [trainer.py] => dsal_main_activation: relu
+2025-10-09 13:52:44,790 [trainer.py] => dsal_comp_activation: tanh
+2025-10-09 13:52:44,790 [trainer.py] => dsal_fusion_weight: 1.0
+2025-10-09 13:52:44,790 [trainer.py] => first_section_adaptation: True
+2025-10-09 13:52:44,790 [trainer.py] => fsa_steps: 50
+2025-10-09 13:52:44,790 [trainer.py] => fsa_lr: 0.0001
+2025-10-09 13:52:44,790 [trainer.py] => fsa_weight_decay: 0.0
+2025-10-09 13:52:44,790 [trainer.py] => fsa_batch_size: 32
+2025-10-09 13:52:44,790 [trainer.py] => run_id: 0
+2025-10-09 13:52:44,790 [trainer.py] => log_path: dsal_0624_logs_null/cifar100_224_vit-b-p16-mocov3/init-20_inc-20_optim-adamw_lr-0.0001_kd-1.0_norm-0.1_type-feat_tem-1.0_gamma_2-0.5_bz-64_epoch-1_seed-1993_onlylora
+2025-10-09 13:52:46,379 [data_manager.py] => [68, 56, 78, 8, 23, 84, 90, 65, 74, 76, 40, 89, 3, 92, 55, 9, 26, 80, 43, 38, 58, 70, 77, 1, 85, 19, 17, 50, 28, 53, 13, 81, 45, 82, 6, 59, 83, 16, 15, 44, 91, 41, 72, 60, 79, 52, 20, 10, 31, 54, 37, 95, 14, 71, 96, 98, 97, 2, 64, 66, 42, 22, 35, 86, 24, 34, 87, 21, 99, 0, 88, 27, 18, 94, 11, 12, 47, 25, 30, 46, 62, 69, 36, 61, 7, 63, 75, 5, 32, 4, 51, 48, 73, 93, 39, 67, 29, 49, 57, 33]
+2025-10-09 13:52:59,994 [trainer.py] => All params: 86388480
+2025-10-09 13:52:59,995 [trainer.py] => Trainable params: 0
+2025-10-09 13:53:07,730 [dsal.py] => [FSA] step=50/50 | loss_ema=2.8295 | acc_ema=43.93%
+2025-10-09 13:53:07,792 [dsal.py] => [FSA] first_section_adaptation completed; convnet re-frozen.
+2025-10-09 13:53:41,581 [dsal.py] => Task 0 | DS-AL Main: 80.25% | DS-AL Fused: 80.20% (C=1.000)
+2025-10-09 13:54:20,689 [dsal.py] => Task 1 | DS-AL Main: 85.25% | DS-AL Fused: 85.58% (C=1.000)
+2025-10-09 13:55:05,629 [dsal.py] => Task 2 | DS-AL Main: 83.53% | DS-AL Fused: 83.45% (C=1.000)
+2025-10-09 13:55:56,471 [dsal.py] => Task 3 | DS-AL Main: 80.60% | DS-AL Fused: 80.54% (C=1.000)
+2025-10-09 13:56:52,902 [dsal.py] => Task 4 | DS-AL Main: 78.24% | DS-AL Fused: 78.31% (C=1.000)
+2025-10-09 13:56:53,130 [trainer.py] => 
+Results Summary:
+2025-10-09 13:56:53,131 [trainer.py] => 
+Classifier: dsal_main
+Task 1: Mean = 80.25%, Std = 0.00
+Task 2: Mean = 85.25%, Std = 0.00
+Task 3: Mean = 83.53%, Std = 0.00
+Task 4: Mean = 80.60%, Std = 0.00
+Task 5: Mean = 78.24%, Std = 0.00
+
+Classifier: dsal_fused
+Task 1: Mean = 80.20%, Std = 0.00
+Task 2: Mean = 85.58%, Std = 0.00
+Task 3: Mean = 83.45%, Std = 0.00
+Task 4: Mean = 80.54%, Std = 0.00
+Task 5: Mean = 78.31%, Std = 0.00
+2025-10-09 13:56:53,132 [trainer.py] => test_only: False
+2025-10-09 13:56:53,132 [trainer.py] => dataset: cifar100_224
+2025-10-09 13:56:53,132 [trainer.py] => smart_defaults: False
+2025-10-09 13:56:53,132 [trainer.py] => prefix: original
+2025-10-09 13:56:53,132 [trainer.py] => memory_size: 0
+2025-10-09 13:56:53,133 [trainer.py] => memory_per_class: 0
+2025-10-09 13:56:53,133 [trainer.py] => fixed_memory: False
+2025-10-09 13:56:53,133 [trainer.py] => shuffle: True
+2025-10-09 13:56:53,133 [trainer.py] => init_cls: 20
+2025-10-09 13:56:53,133 [trainer.py] => increment: 20
+2025-10-09 13:56:53,133 [trainer.py] => model_name: dsal
+2025-10-09 13:56:53,133 [trainer.py] => vit_type: vit-b-p16-mocov3
+2025-10-09 13:56:53,133 [trainer.py] => lora_type: basic_lora
+2025-10-09 13:56:53,133 [trainer.py] => weight_decay: 3e-05
+2025-10-09 13:56:53,133 [trainer.py] => device: [device(type='cuda', index=0)]
+2025-10-09 13:56:53,133 [trainer.py] => lora_rank: 4
+2025-10-09 13:56:53,133 [trainer.py] => num_used_layers: 1
+2025-10-09 13:56:53,133 [trainer.py] => sce_a: 0.5
+2025-10-09 13:56:53,133 [trainer.py] => sce_b: 0.5
+2025-10-09 13:56:53,133 [trainer.py] => seed: 1996
+2025-10-09 13:56:53,133 [trainer.py] => epochs: 1
+2025-10-09 13:56:53,133 [trainer.py] => ca_epochs: 5
+2025-10-09 13:56:53,133 [trainer.py] => optimizer: adamw
+2025-10-09 13:56:53,133 [trainer.py] => lrate: 0.0001
+2025-10-09 13:56:53,133 [trainer.py] => head_scale: 10.0
+2025-10-09 13:56:53,133 [trainer.py] => batch_size: 64
+2025-10-09 13:56:53,134 [trainer.py] => tune_classifier: True
+2025-10-09 13:56:53,134 [trainer.py] => gamma_norm: 0.1
+2025-10-09 13:56:53,134 [trainer.py] => gamma_kd: 1.0
+2025-10-09 13:56:53,134 [trainer.py] => kd_type: feat
+2025-10-09 13:56:53,134 [trainer.py] => only_lora: True
+2025-10-09 13:56:53,134 [trainer.py] => user: null
+2025-10-09 13:56:53,134 [trainer.py] => num_workers: 4
+2025-10-09 13:56:53,134 [trainer.py] => gamma_2: 0.5
+2025-10-09 13:56:53,134 [trainer.py] => alpha_t: 1.0
+2025-10-09 13:56:53,134 [trainer.py] => random_feature_dim: 8192
+2025-10-09 13:56:53,134 [trainer.py] => ridge_lambda: 0.001
+2025-10-09 13:56:53,134 [trainer.py] => rls_eps: 1e-06
+2025-10-09 13:56:53,134 [trainer.py] => acil_activation: relu
+2025-10-09 13:56:53,134 [trainer.py] => dsal_main_activation: relu
+2025-10-09 13:56:53,134 [trainer.py] => dsal_comp_activation: tanh
+2025-10-09 13:56:53,134 [trainer.py] => dsal_fusion_weight: 1.0
+2025-10-09 13:56:53,134 [trainer.py] => first_section_adaptation: True
+2025-10-09 13:56:53,134 [trainer.py] => fsa_steps: 50
+2025-10-09 13:56:53,134 [trainer.py] => fsa_lr: 0.0001
+2025-10-09 13:56:53,134 [trainer.py] => fsa_weight_decay: 0.0
+2025-10-09 13:56:53,134 [trainer.py] => fsa_batch_size: 32
+2025-10-09 13:56:53,134 [trainer.py] => run_id: 1
+2025-10-09 13:56:53,135 [trainer.py] => log_path: dsal_0624_logs_null/cifar100_224_vit-b-p16-mocov3/init-20_inc-20_optim-adamw_lr-0.0001_kd-1.0_norm-0.1_type-feat_tem-1.0_gamma_2-0.5_bz-64_epoch-1_seed-1996_onlylora
+2025-10-09 13:56:55,435 [data_manager.py] => [35, 18, 40, 85, 63, 62, 77, 73, 12, 44, 31, 26, 78, 33, 9, 86, 92, 87, 93, 71, 45, 7, 17, 6, 24, 21, 27, 99, 81, 2, 94, 57, 13, 30, 8, 55, 76, 46, 49, 47, 60, 36, 16, 43, 54, 83, 88, 51, 15, 20, 53, 66, 50, 3, 98, 90, 80, 5, 32, 75, 89, 10, 82, 64, 29, 70, 91, 52, 95, 23, 69, 56, 96, 68, 39, 42, 19, 0, 22, 72, 65, 61, 74, 59, 25, 37, 48, 84, 34, 28, 4, 11, 14, 79, 97, 41, 38, 67, 1, 58]
+2025-10-09 13:57:11,948 [trainer.py] => All params: 86388480
+2025-10-09 13:57:11,948 [trainer.py] => Trainable params: 0
+2025-10-09 13:57:18,804 [dsal.py] => [FSA] step=50/50 | loss_ema=2.8246 | acc_ema=42.12%
+2025-10-09 13:57:18,820 [dsal.py] => [FSA] first_section_adaptation completed; convnet re-frozen.
+2025-10-09 13:57:52,652 [dsal.py] => Task 0 | DS-AL Main: 80.25% | DS-AL Fused: 80.30% (C=1.000)
+2025-10-09 13:58:32,211 [dsal.py] => Task 1 | DS-AL Main: 83.78% | DS-AL Fused: 83.88% (C=1.000)
+2025-10-09 13:59:17,340 [dsal.py] => Task 2 | DS-AL Main: 82.50% | DS-AL Fused: 82.75% (C=1.000)
+2025-10-09 14:00:08,175 [dsal.py] => Task 3 | DS-AL Main: 79.86% | DS-AL Fused: 80.22% (C=1.000)
+2025-10-09 14:01:04,634 [dsal.py] => Task 4 | DS-AL Main: 77.16% | DS-AL Fused: 77.47% (C=1.000)
+2025-10-09 14:01:04,887 [trainer.py] => 
+Results Summary:
+2025-10-09 14:01:04,887 [trainer.py] => 
+Classifier: dsal_main
+Task 1: Mean = 80.25%, Std = 0.00
+Task 2: Mean = 84.52%, Std = 0.73
+Task 3: Mean = 83.02%, Std = 0.52
+Task 4: Mean = 80.23%, Std = 0.37
+Task 5: Mean = 77.70%, Std = 0.54
+
+Classifier: dsal_fused
+Task 1: Mean = 80.25%, Std = 0.05
+Task 2: Mean = 84.73%, Std = 0.85
+Task 3: Mean = 83.10%, Std = 0.35
+Task 4: Mean = 80.38%, Std = 0.16
+Task 5: Mean = 77.89%, Std = 0.42
+2025-10-09 14:01:04,889 [trainer.py] => test_only: False
+2025-10-09 14:01:04,889 [trainer.py] => dataset: cifar100_224
+2025-10-09 14:01:04,889 [trainer.py] => smart_defaults: False
+2025-10-09 14:01:04,889 [trainer.py] => prefix: original
+2025-10-09 14:01:04,889 [trainer.py] => memory_size: 0
+2025-10-09 14:01:04,889 [trainer.py] => memory_per_class: 0
+2025-10-09 14:01:04,889 [trainer.py] => fixed_memory: False
+2025-10-09 14:01:04,889 [trainer.py] => shuffle: True
+2025-10-09 14:01:04,889 [trainer.py] => init_cls: 20
+2025-10-09 14:01:04,889 [trainer.py] => increment: 20
+2025-10-09 14:01:04,889 [trainer.py] => model_name: dsal
+2025-10-09 14:01:04,889 [trainer.py] => vit_type: vit-b-p16-mocov3
+2025-10-09 14:01:04,889 [trainer.py] => lora_type: basic_lora
+2025-10-09 14:01:04,889 [trainer.py] => weight_decay: 3e-05
+2025-10-09 14:01:04,889 [trainer.py] => device: [device(type='cuda', index=0)]
+2025-10-09 14:01:04,889 [trainer.py] => lora_rank: 4
+2025-10-09 14:01:04,889 [trainer.py] => num_used_layers: 1
+2025-10-09 14:01:04,889 [trainer.py] => sce_a: 0.5
+2025-10-09 14:01:04,889 [trainer.py] => sce_b: 0.5
+2025-10-09 14:01:04,889 [trainer.py] => seed: 1997
+2025-10-09 14:01:04,889 [trainer.py] => epochs: 1
+2025-10-09 14:01:04,890 [trainer.py] => ca_epochs: 5
+2025-10-09 14:01:04,890 [trainer.py] => optimizer: adamw
+2025-10-09 14:01:04,890 [trainer.py] => lrate: 0.0001
+2025-10-09 14:01:04,890 [trainer.py] => head_scale: 10.0
+2025-10-09 14:01:04,890 [trainer.py] => batch_size: 64
+2025-10-09 14:01:04,890 [trainer.py] => tune_classifier: True
+2025-10-09 14:01:04,890 [trainer.py] => gamma_norm: 0.1
+2025-10-09 14:01:04,890 [trainer.py] => gamma_kd: 1.0
+2025-10-09 14:01:04,890 [trainer.py] => kd_type: feat
+2025-10-09 14:01:04,890 [trainer.py] => only_lora: True
+2025-10-09 14:01:04,890 [trainer.py] => user: null
+2025-10-09 14:01:04,890 [trainer.py] => num_workers: 4
+2025-10-09 14:01:04,890 [trainer.py] => gamma_2: 0.5
+2025-10-09 14:01:04,890 [trainer.py] => alpha_t: 1.0
+2025-10-09 14:01:04,890 [trainer.py] => random_feature_dim: 8192
+2025-10-09 14:01:04,890 [trainer.py] => ridge_lambda: 0.001
+2025-10-09 14:01:04,890 [trainer.py] => rls_eps: 1e-06
+2025-10-09 14:01:04,890 [trainer.py] => acil_activation: relu
+2025-10-09 14:01:04,890 [trainer.py] => dsal_main_activation: relu
+2025-10-09 14:01:04,890 [trainer.py] => dsal_comp_activation: tanh
+2025-10-09 14:01:04,890 [trainer.py] => dsal_fusion_weight: 1.0
+2025-10-09 14:01:04,890 [trainer.py] => first_section_adaptation: True
+2025-10-09 14:01:04,890 [trainer.py] => fsa_steps: 50
+2025-10-09 14:01:04,890 [trainer.py] => fsa_lr: 0.0001
+2025-10-09 14:01:04,890 [trainer.py] => fsa_weight_decay: 0.0
+2025-10-09 14:01:04,891 [trainer.py] => fsa_batch_size: 32
+2025-10-09 14:01:04,891 [trainer.py] => run_id: 2
+2025-10-09 14:01:04,891 [trainer.py] => log_path: dsal_0624_logs_null/cifar100_224_vit-b-p16-mocov3/init-20_inc-20_optim-adamw_lr-0.0001_kd-1.0_norm-0.1_type-feat_tem-1.0_gamma_2-0.5_bz-64_epoch-1_seed-1997_onlylora
+2025-10-09 14:01:06,706 [data_manager.py] => [88, 77, 36, 54, 92, 4, 11, 24, 71, 31, 23, 99, 98, 91, 3, 7, 50, 26, 61, 90, 44, 35, 46, 32, 62, 95, 63, 58, 12, 74, 79, 47, 6, 67, 42, 78, 51, 65, 30, 2, 76, 53, 56, 72, 60, 37, 96, 97, 40, 1, 82, 83, 70, 64, 17, 15, 52, 94, 10, 43, 34, 20, 59, 25, 68, 89, 33, 87, 69, 27, 9, 39, 93, 73, 22, 84, 5, 75, 55, 19, 45, 21, 86, 66, 85, 0, 49, 13, 28, 81, 80, 8, 41, 38, 18, 14, 16, 48, 57, 29]
+2025-10-09 14:01:21,556 [trainer.py] => All params: 86388480
+2025-10-09 14:01:21,557 [trainer.py] => Trainable params: 0
+2025-10-09 14:01:28,515 [dsal.py] => [FSA] step=50/50 | loss_ema=2.8271 | acc_ema=40.56%
+2025-10-09 14:01:28,548 [dsal.py] => [FSA] first_section_adaptation completed; convnet re-frozen.
+2025-10-09 14:02:02,451 [dsal.py] => Task 0 | DS-AL Main: 79.10% | DS-AL Fused: 79.35% (C=1.000)
+2025-10-09 14:02:42,002 [dsal.py] => Task 1 | DS-AL Main: 80.83% | DS-AL Fused: 80.85% (C=1.000)
+2025-10-09 14:03:27,178 [dsal.py] => Task 2 | DS-AL Main: 80.43% | DS-AL Fused: 80.62% (C=1.000)
+2025-10-09 14:04:18,337 [dsal.py] => Task 3 | DS-AL Main: 78.55% | DS-AL Fused: 78.75% (C=1.000)
+2025-10-09 14:05:14,924 [dsal.py] => Task 4 | DS-AL Main: 77.29% | DS-AL Fused: 77.43% (C=1.000)
+2025-10-09 14:05:15,212 [trainer.py] => 
+Results Summary:
+2025-10-09 14:05:15,212 [trainer.py] => 
+Classifier: dsal_main
+Task 1: Mean = 79.87%, Std = 0.54
+Task 2: Mean = 83.29%, Std = 1.84
+Task 3: Mean = 82.15%, Std = 1.29
+Task 4: Mean = 79.67%, Std = 0.85
+Task 5: Mean = 77.56%, Std = 0.48
+
+Classifier: dsal_fused
+Task 1: Mean = 79.95%, Std = 0.43
+Task 2: Mean = 83.44%, Std = 1.96
+Task 3: Mean = 82.27%, Std = 1.20
+Task 4: Mean = 79.84%, Std = 0.78
+Task 5: Mean = 77.74%, Std = 0.41
+2025-10-09 14:14:19,814 [trainer.py] => test_only: False
+2025-10-09 14:14:19,814 [trainer.py] => dataset: cifar100_224
+2025-10-09 14:14:19,814 [trainer.py] => smart_defaults: False
+2025-10-09 14:14:19,814 [trainer.py] => prefix: original
+2025-10-09 14:14:19,814 [trainer.py] => memory_size: 0
+2025-10-09 14:14:19,814 [trainer.py] => memory_per_class: 0
+2025-10-09 14:14:19,814 [trainer.py] => fixed_memory: False
+2025-10-09 14:14:19,814 [trainer.py] => shuffle: True
+2025-10-09 14:14:19,814 [trainer.py] => init_cls: 20
+2025-10-09 14:14:19,814 [trainer.py] => increment: 20
+2025-10-09 14:14:19,814 [trainer.py] => model_name: dsal
+2025-10-09 14:14:19,814 [trainer.py] => vit_type: vit-b-p16-mocov3
+2025-10-09 14:14:19,814 [trainer.py] => lora_type: basic_lora
+2025-10-09 14:14:19,814 [trainer.py] => weight_decay: 3e-05
+2025-10-09 14:14:19,815 [trainer.py] => device: [device(type='cuda', index=0)]
+2025-10-09 14:14:19,815 [trainer.py] => lora_rank: 4
+2025-10-09 14:14:19,815 [trainer.py] => num_used_layers: 1
+2025-10-09 14:14:19,815 [trainer.py] => sce_a: 0.5
+2025-10-09 14:14:19,815 [trainer.py] => sce_b: 0.5
+2025-10-09 14:14:19,815 [trainer.py] => seed: 1993
+2025-10-09 14:14:19,815 [trainer.py] => epochs: 1
+2025-10-09 14:14:19,815 [trainer.py] => ca_epochs: 5
+2025-10-09 14:14:19,815 [trainer.py] => optimizer: adamw
+2025-10-09 14:14:19,815 [trainer.py] => lrate: 0.0001
+2025-10-09 14:14:19,815 [trainer.py] => head_scale: 10.0
+2025-10-09 14:14:19,815 [trainer.py] => batch_size: 64
+2025-10-09 14:14:19,815 [trainer.py] => tune_classifier: True
+2025-10-09 14:14:19,815 [trainer.py] => gamma_norm: 0.1
+2025-10-09 14:14:19,815 [trainer.py] => gamma_kd: 1.0
+2025-10-09 14:14:19,815 [trainer.py] => kd_type: feat
+2025-10-09 14:14:19,815 [trainer.py] => only_lora: True
+2025-10-09 14:14:19,815 [trainer.py] => user: null
+2025-10-09 14:14:19,815 [trainer.py] => num_workers: 4
+2025-10-09 14:14:19,815 [trainer.py] => gamma_2: 0.5
+2025-10-09 14:14:19,815 [trainer.py] => alpha_t: 1.0
+2025-10-09 14:14:19,815 [trainer.py] => random_feature_dim: 8192
+2025-10-09 14:14:19,815 [trainer.py] => ridge_lambda: 0.001
+2025-10-09 14:14:19,815 [trainer.py] => rls_eps: 1e-06
+2025-10-09 14:14:19,815 [trainer.py] => acil_activation: relu
+2025-10-09 14:14:19,815 [trainer.py] => dsal_main_activation: relu
+2025-10-09 14:14:19,815 [trainer.py] => dsal_comp_activation: tanh
+2025-10-09 14:14:19,815 [trainer.py] => dsal_fusion_weight: 1.0
+2025-10-09 14:14:19,815 [trainer.py] => first_section_adaptation: True
+2025-10-09 14:14:19,815 [trainer.py] => fsa_steps: 500
+2025-10-09 14:14:19,815 [trainer.py] => fsa_lr: 0.0002
+2025-10-09 14:14:19,815 [trainer.py] => fsa_weight_decay: 0.0
+2025-10-09 14:14:19,815 [trainer.py] => fsa_batch_size: 32
+2025-10-09 14:14:19,816 [trainer.py] => run_id: 0
+2025-10-09 14:14:19,816 [trainer.py] => log_path: dsal_0624_logs_null/cifar100_224_vit-b-p16-mocov3/init-20_inc-20_optim-adamw_lr-0.0001_kd-1.0_norm-0.1_type-feat_tem-1.0_gamma_2-0.5_bz-64_epoch-1_seed-1993_onlylora
+2025-10-09 14:14:21,603 [data_manager.py] => [68, 56, 78, 8, 23, 84, 90, 65, 74, 76, 40, 89, 3, 92, 55, 9, 26, 80, 43, 38, 58, 70, 77, 1, 85, 19, 17, 50, 28, 53, 13, 81, 45, 82, 6, 59, 83, 16, 15, 44, 91, 41, 72, 60, 79, 52, 20, 10, 31, 54, 37, 95, 14, 71, 96, 98, 97, 2, 64, 66, 42, 22, 35, 86, 24, 34, 87, 21, 99, 0, 88, 27, 18, 94, 11, 12, 47, 25, 30, 46, 62, 69, 36, 61, 7, 63, 75, 5, 32, 4, 51, 48, 73, 93, 39, 67, 29, 49, 57, 33]
+2025-10-09 14:14:35,841 [trainer.py] => All params: 86388480
+2025-10-09 14:14:35,842 [trainer.py] => Trainable params: 0
+2025-10-09 14:14:43,686 [dsal.py] => [FSA] step=50/500 | loss_ema=2.7429 | acc_ema=46.56%
+2025-10-09 14:14:50,084 [dsal.py] => [FSA] step=100/500 | loss_ema=2.4240 | acc_ema=61.84%
+2025-10-09 14:14:56,512 [dsal.py] => [FSA] step=150/500 | loss_ema=2.0961 | acc_ema=67.00%
+2025-10-09 14:15:02,968 [dsal.py] => [FSA] step=200/500 | loss_ema=1.7941 | acc_ema=69.82%
+2025-10-09 14:15:09,436 [dsal.py] => [FSA] step=250/500 | loss_ema=1.6095 | acc_ema=71.68%
+2025-10-09 14:15:15,912 [dsal.py] => [FSA] step=300/500 | loss_ema=1.5099 | acc_ema=70.54%
+2025-10-09 14:15:22,453 [dsal.py] => [FSA] step=350/500 | loss_ema=1.2906 | acc_ema=77.58%
+2025-10-09 14:15:28,934 [dsal.py] => [FSA] step=400/500 | loss_ema=1.2324 | acc_ema=78.32%
+2025-10-09 14:15:35,420 [dsal.py] => [FSA] step=450/500 | loss_ema=1.1838 | acc_ema=79.34%
+2025-10-09 14:15:52,863 [trainer.py] => test_only: False
+2025-10-09 14:15:52,863 [trainer.py] => dataset: cifar100_224
+2025-10-09 14:15:52,864 [trainer.py] => smart_defaults: False
+2025-10-09 14:15:52,864 [trainer.py] => prefix: original
+2025-10-09 14:15:52,864 [trainer.py] => memory_size: 0
+2025-10-09 14:15:52,864 [trainer.py] => memory_per_class: 0
+2025-10-09 14:15:52,864 [trainer.py] => fixed_memory: False
+2025-10-09 14:15:52,864 [trainer.py] => shuffle: True
+2025-10-09 14:15:52,864 [trainer.py] => init_cls: 20
+2025-10-09 14:15:52,864 [trainer.py] => increment: 20
+2025-10-09 14:15:52,864 [trainer.py] => model_name: dsal
+2025-10-09 14:15:52,864 [trainer.py] => vit_type: vit-b-p16-mocov3
+2025-10-09 14:15:52,864 [trainer.py] => lora_type: basic_lora
+2025-10-09 14:15:52,864 [trainer.py] => weight_decay: 3e-05
+2025-10-09 14:15:52,864 [trainer.py] => device: [device(type='cuda', index=0)]
+2025-10-09 14:15:52,864 [trainer.py] => lora_rank: 4
+2025-10-09 14:15:52,864 [trainer.py] => num_used_layers: 1
+2025-10-09 14:15:52,864 [trainer.py] => sce_a: 0.5
+2025-10-09 14:15:52,864 [trainer.py] => sce_b: 0.5
+2025-10-09 14:15:52,864 [trainer.py] => seed: 1993
+2025-10-09 14:15:52,864 [trainer.py] => epochs: 1
+2025-10-09 14:15:52,864 [trainer.py] => ca_epochs: 5
+2025-10-09 14:15:52,864 [trainer.py] => optimizer: adamw
+2025-10-09 14:15:52,864 [trainer.py] => lrate: 0.0001
+2025-10-09 14:15:52,864 [trainer.py] => head_scale: 10.0
+2025-10-09 14:15:52,864 [trainer.py] => batch_size: 64
+2025-10-09 14:15:52,864 [trainer.py] => tune_classifier: True
+2025-10-09 14:15:52,864 [trainer.py] => gamma_norm: 0.1
+2025-10-09 14:15:52,864 [trainer.py] => gamma_kd: 1.0
+2025-10-09 14:15:52,864 [trainer.py] => kd_type: feat
+2025-10-09 14:15:52,864 [trainer.py] => only_lora: True
+2025-10-09 14:15:52,864 [trainer.py] => user: null
+2025-10-09 14:15:52,864 [trainer.py] => num_workers: 4
+2025-10-09 14:15:52,864 [trainer.py] => gamma_2: 0.5
+2025-10-09 14:15:52,865 [trainer.py] => alpha_t: 1.0
+2025-10-09 14:15:52,865 [trainer.py] => random_feature_dim: 8192
+2025-10-09 14:15:52,865 [trainer.py] => ridge_lambda: 0.001
+2025-10-09 14:15:52,865 [trainer.py] => rls_eps: 1e-06
+2025-10-09 14:15:52,865 [trainer.py] => acil_activation: relu
+2025-10-09 14:15:52,865 [trainer.py] => dsal_main_activation: relu
+2025-10-09 14:15:52,865 [trainer.py] => dsal_comp_activation: tanh
+2025-10-09 14:15:52,865 [trainer.py] => dsal_fusion_weight: 1.0
+2025-10-09 14:15:52,865 [trainer.py] => first_section_adaptation: True
+2025-10-09 14:15:52,865 [trainer.py] => fsa_steps: 1000
+2025-10-09 14:15:52,865 [trainer.py] => fsa_lr: 0.0001
+2025-10-09 14:15:52,865 [trainer.py] => fsa_weight_decay: 0.0
+2025-10-09 14:15:52,865 [trainer.py] => fsa_batch_size: 32
+2025-10-09 14:15:52,865 [trainer.py] => run_id: 0
+2025-10-09 14:15:52,865 [trainer.py] => log_path: dsal_0624_logs_null/cifar100_224_vit-b-p16-mocov3/init-20_inc-20_optim-adamw_lr-0.0001_kd-1.0_norm-0.1_type-feat_tem-1.0_gamma_2-0.5_bz-64_epoch-1_seed-1993_onlylora
+2025-10-09 14:15:54,509 [data_manager.py] => [68, 56, 78, 8, 23, 84, 90, 65, 74, 76, 40, 89, 3, 92, 55, 9, 26, 80, 43, 38, 58, 70, 77, 1, 85, 19, 17, 50, 28, 53, 13, 81, 45, 82, 6, 59, 83, 16, 15, 44, 91, 41, 72, 60, 79, 52, 20, 10, 31, 54, 37, 95, 14, 71, 96, 98, 97, 2, 64, 66, 42, 22, 35, 86, 24, 34, 87, 21, 99, 0, 88, 27, 18, 94, 11, 12, 47, 25, 30, 46, 62, 69, 36, 61, 7, 63, 75, 5, 32, 4, 51, 48, 73, 93, 39, 67, 29, 49, 57, 33]
+2025-10-09 14:16:09,459 [trainer.py] => All params: 86388480
+2025-10-09 14:16:09,459 [trainer.py] => Trainable params: 0
+2025-10-09 14:16:17,414 [dsal.py] => [FSA] step=50/1000 | loss_ema=2.8295 | acc_ema=43.93%
+2025-10-09 14:16:23,850 [dsal.py] => [FSA] step=100/1000 | loss_ema=2.6055 | acc_ema=62.43%
+2025-10-09 14:16:30,316 [dsal.py] => [FSA] step=150/1000 | loss_ema=2.3870 | acc_ema=70.99%
+2025-10-09 14:16:36,807 [dsal.py] => [FSA] step=200/1000 | loss_ema=2.1735 | acc_ema=75.04%
+2025-10-09 14:16:43,299 [dsal.py] => [FSA] step=250/1000 | loss_ema=2.0112 | acc_ema=74.78%
+2025-10-09 14:16:49,838 [dsal.py] => [FSA] step=300/1000 | loss_ema=1.8437 | acc_ema=76.71%
+2025-10-09 14:16:56,359 [dsal.py] => [FSA] step=350/1000 | loss_ema=1.5891 | acc_ema=82.36%
+2025-10-09 14:17:02,851 [dsal.py] => [FSA] step=400/1000 | loss_ema=1.4445 | acc_ema=82.52%
+2025-10-09 14:17:09,338 [dsal.py] => [FSA] step=450/1000 | loss_ema=1.3114 | acc_ema=81.91%
+2025-10-09 14:17:15,845 [dsal.py] => [FSA] step=500/1000 | loss_ema=1.1508 | acc_ema=86.52%
+2025-10-09 14:17:22,348 [dsal.py] => [FSA] step=550/1000 | loss_ema=1.0950 | acc_ema=86.03%
+2025-10-09 14:17:28,881 [dsal.py] => [FSA] step=600/1000 | loss_ema=1.0598 | acc_ema=85.96%
+2025-10-09 14:17:35,440 [dsal.py] => [FSA] step=650/1000 | loss_ema=0.9676 | acc_ema=88.15%
+2025-10-09 14:17:41,956 [dsal.py] => [FSA] step=700/1000 | loss_ema=0.9591 | acc_ema=88.27%
+2025-10-09 14:17:48,449 [dsal.py] => [FSA] step=750/1000 | loss_ema=0.8780 | acc_ema=90.84%
+2025-10-09 14:17:54,942 [dsal.py] => [FSA] step=800/1000 | loss_ema=0.8524 | acc_ema=91.49%
+2025-10-09 14:18:01,444 [dsal.py] => [FSA] step=850/1000 | loss_ema=0.8025 | acc_ema=92.69%
+2025-10-09 14:18:07,949 [dsal.py] => [FSA] step=900/1000 | loss_ema=0.8350 | acc_ema=92.10%
+2025-10-09 14:18:14,487 [dsal.py] => [FSA] step=950/1000 | loss_ema=0.7931 | acc_ema=93.01%
+2025-10-09 14:18:21,030 [dsal.py] => [FSA] step=1000/1000 | loss_ema=0.8300 | acc_ema=91.82%
+2025-10-09 14:18:21,067 [dsal.py] => [FSA] first_section_adaptation completed; convnet re-frozen.
+2025-10-09 14:18:55,181 [dsal.py] => Task 0 | DS-AL Main: 92.85% | DS-AL Fused: 92.90% (C=1.000)
+2025-10-09 14:19:34,492 [dsal.py] => Task 1 | DS-AL Main: 86.42% | DS-AL Fused: 86.62% (C=1.000)
+2025-10-09 14:20:19,802 [dsal.py] => Task 2 | DS-AL Main: 81.88% | DS-AL Fused: 82.27% (C=1.000)
+2025-10-09 14:21:10,531 [dsal.py] => Task 3 | DS-AL Main: 78.47% | DS-AL Fused: 79.33% (C=1.000)
+2025-10-09 14:22:07,067 [dsal.py] => Task 4 | DS-AL Main: 75.77% | DS-AL Fused: 76.30% (C=1.000)
+2025-10-09 14:22:07,266 [trainer.py] => 
+Results Summary:
+2025-10-09 14:22:07,266 [trainer.py] => 
+Classifier: dsal_main
+Task 1: Mean = 92.85%, Std = 0.00
+Task 2: Mean = 86.42%, Std = 0.00
+Task 3: Mean = 81.88%, Std = 0.00
+Task 4: Mean = 78.47%, Std = 0.00
+Task 5: Mean = 75.77%, Std = 0.00
+
+Classifier: dsal_fused
+Task 1: Mean = 92.90%, Std = 0.00
+Task 2: Mean = 86.62%, Std = 0.00
+Task 3: Mean = 82.27%, Std = 0.00
+Task 4: Mean = 79.33%, Std = 0.00
+Task 5: Mean = 76.30%, Std = 0.00
+2025-10-09 14:22:07,268 [trainer.py] => test_only: False
+2025-10-09 14:22:07,268 [trainer.py] => dataset: cifar100_224
+2025-10-09 14:22:07,268 [trainer.py] => smart_defaults: False
+2025-10-09 14:22:07,268 [trainer.py] => prefix: original
+2025-10-09 14:22:07,269 [trainer.py] => memory_size: 0
+2025-10-09 14:22:07,269 [trainer.py] => memory_per_class: 0
+2025-10-09 14:22:07,269 [trainer.py] => fixed_memory: False
+2025-10-09 14:22:07,269 [trainer.py] => shuffle: True
+2025-10-09 14:22:07,269 [trainer.py] => init_cls: 20
+2025-10-09 14:22:07,269 [trainer.py] => increment: 20
+2025-10-09 14:22:07,269 [trainer.py] => model_name: dsal
+2025-10-09 14:22:07,269 [trainer.py] => vit_type: vit-b-p16-mocov3
+2025-10-09 14:22:07,269 [trainer.py] => lora_type: basic_lora
+2025-10-09 14:22:07,269 [trainer.py] => weight_decay: 3e-05
+2025-10-09 14:22:07,269 [trainer.py] => device: [device(type='cuda', index=0)]
+2025-10-09 14:22:07,269 [trainer.py] => lora_rank: 4
+2025-10-09 14:22:07,269 [trainer.py] => num_used_layers: 1
+2025-10-09 14:22:07,270 [trainer.py] => sce_a: 0.5
+2025-10-09 14:22:07,270 [trainer.py] => sce_b: 0.5
+2025-10-09 14:22:07,270 [trainer.py] => seed: 1996
+2025-10-09 14:22:07,270 [trainer.py] => epochs: 1
+2025-10-09 14:22:07,270 [trainer.py] => ca_epochs: 5
+2025-10-09 14:22:07,270 [trainer.py] => optimizer: adamw
+2025-10-09 14:22:07,270 [trainer.py] => lrate: 0.0001
+2025-10-09 14:22:07,270 [trainer.py] => head_scale: 10.0
+2025-10-09 14:22:07,270 [trainer.py] => batch_size: 64
+2025-10-09 14:22:07,270 [trainer.py] => tune_classifier: True
+2025-10-09 14:22:07,270 [trainer.py] => gamma_norm: 0.1
+2025-10-09 14:22:07,270 [trainer.py] => gamma_kd: 1.0
+2025-10-09 14:22:07,270 [trainer.py] => kd_type: feat
+2025-10-09 14:22:07,270 [trainer.py] => only_lora: True
+2025-10-09 14:22:07,271 [trainer.py] => user: null
+2025-10-09 14:22:07,271 [trainer.py] => num_workers: 4
+2025-10-09 14:22:07,271 [trainer.py] => gamma_2: 0.5
+2025-10-09 14:22:07,271 [trainer.py] => alpha_t: 1.0
+2025-10-09 14:22:07,271 [trainer.py] => random_feature_dim: 8192
+2025-10-09 14:22:07,271 [trainer.py] => ridge_lambda: 0.001
+2025-10-09 14:22:07,271 [trainer.py] => rls_eps: 1e-06
+2025-10-09 14:22:07,271 [trainer.py] => acil_activation: relu
+2025-10-09 14:22:07,271 [trainer.py] => dsal_main_activation: relu
+2025-10-09 14:22:07,271 [trainer.py] => dsal_comp_activation: tanh
+2025-10-09 14:22:07,271 [trainer.py] => dsal_fusion_weight: 1.0
+2025-10-09 14:22:07,271 [trainer.py] => first_section_adaptation: True
+2025-10-09 14:22:07,271 [trainer.py] => fsa_steps: 1000
+2025-10-09 14:22:07,271 [trainer.py] => fsa_lr: 0.0001
+2025-10-09 14:22:07,272 [trainer.py] => fsa_weight_decay: 0.0
+2025-10-09 14:22:07,272 [trainer.py] => fsa_batch_size: 32
+2025-10-09 14:22:07,272 [trainer.py] => run_id: 1
+2025-10-09 14:22:07,272 [trainer.py] => log_path: dsal_0624_logs_null/cifar100_224_vit-b-p16-mocov3/init-20_inc-20_optim-adamw_lr-0.0001_kd-1.0_norm-0.1_type-feat_tem-1.0_gamma_2-0.5_bz-64_epoch-1_seed-1996_onlylora
+2025-10-09 14:22:09,050 [data_manager.py] => [35, 18, 40, 85, 63, 62, 77, 73, 12, 44, 31, 26, 78, 33, 9, 86, 92, 87, 93, 71, 45, 7, 17, 6, 24, 21, 27, 99, 81, 2, 94, 57, 13, 30, 8, 55, 76, 46, 49, 47, 60, 36, 16, 43, 54, 83, 88, 51, 15, 20, 53, 66, 50, 3, 98, 90, 80, 5, 32, 75, 89, 10, 82, 64, 29, 70, 91, 52, 95, 23, 69, 56, 96, 68, 39, 42, 19, 0, 22, 72, 65, 61, 74, 59, 25, 37, 48, 84, 34, 28, 4, 11, 14, 79, 97, 41, 38, 67, 1, 58]
+2025-10-09 14:22:23,859 [trainer.py] => All params: 86388480
+2025-10-09 14:22:23,860 [trainer.py] => Trainable params: 0
+2025-10-09 14:22:30,674 [dsal.py] => [FSA] step=50/1000 | loss_ema=2.8246 | acc_ema=42.12%
+2025-10-09 14:22:37,132 [dsal.py] => [FSA] step=100/1000 | loss_ema=2.5752 | acc_ema=64.40%

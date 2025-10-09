@@ -50,8 +50,6 @@ def train(args):
             f"seed-{args['seed']}"
         )
 
-        if args['use_auxiliary_data_enhancement']:
-            logfile_name += f"_aux_{args['auxiliary_data_size']}"
         
         if args['only_lora']:
             logfile_name += "_onlylora"
