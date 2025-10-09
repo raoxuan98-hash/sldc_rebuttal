@@ -90,6 +90,13 @@ class DSALLearner(BaseLearner):
             self._rf_dim, 0, device=self._device, dtype=torch.float32
         )
 
+        self._fsa_done = False
+        self._use_fsa = bool(args.get("first_section_adaptation", True))
+        self._fsa_epochs = int(args.get("fsa_epochs", 1))
+        self._fsa_lr = float(args.get("fsa_lr", 1e-4))
+        self._fsa_wd = float(args.get("fsa_weight_decay", 0.0))
+        self._fsa_bs = int(args.get("fsa_batch_size", 64))
+
     # ------------------------------------------------------------------
     # Feature helpers
     # ------------------------------------------------------------------
@@ -120,6 +127,80 @@ class DSALLearner(BaseLearner):
         features_all = torch.cat(feats, dim=0).to(self._device)
         labels_all = torch.cat(labels, dim=0).to(self._device)
         return {"features": features_all, "labels": labels_all}
+
+    def _first_section_adaptation(self, data_manager) -> None:
+        """Adapt the frozen ViT encoder using the first task before analytic training."""
+
+        try:
+            first_task_size = data_manager.get_task_size(0)
+        except Exception:
+            first_task_size = data_manager.get_task_size(1)
+
+        train_dataset = data_manager.get_dataset(
+            np.arange(0, first_task_size),
+            source="train",
+            mode="train",
+            appendent=[],
+            with_raw=False,
+        )
+
+        train_loader = self._build_dataloader(
+            train_dataset, batch_size=self._fsa_bs, shuffle=True
+        )
+
+        for param in self._network.convnet.parameters():
+            param.requires_grad = True
+        self._network.train()
+
+        classifier = torch.nn.Linear(self._feature_dim, first_task_size).to(
+            self._device
+        )
+        optimizer = torch.optim.AdamW(
+            list(self._network.convnet.parameters()) + list(classifier.parameters()),
+            lr=self._fsa_lr,
+            weight_decay=self._fsa_wd,
+        )
+        criterion = torch.nn.CrossEntropyLoss()
+
+        for epoch in range(self._fsa_epochs):
+            running_loss = 0.0
+            total = 0
+            correct = 0
+
+            for _, (_, inputs, targets) in enumerate(train_loader):
+                inputs = inputs.to(self._device, non_blocking=True)
+                targets = targets.to(self._device, non_blocking=True)
+
+                optimizer.zero_grad(set_to_none=True)
+                features = self._network.convnet(inputs)["features"]
+                logits = classifier(features)
+                loss = criterion(logits, targets)
+                loss.backward()
+                optimizer.step()
+
+                running_loss += loss.item() * targets.size(0)
+                with torch.no_grad():
+                    preds = torch.argmax(logits, dim=1)
+                    correct += (preds == targets).sum().item()
+                    total += targets.size(0)
+
+            logging.info(
+                "[FSA] epoch=%d | loss=%.4f | acc=%.2f%%",
+                epoch + 1,
+                running_loss / max(total, 1),
+                100.0 * correct / max(total, 1),
+            )
+
+        del classifier
+        torch.cuda.empty_cache()
+
+        for param in self._network.convnet.parameters():
+            param.requires_grad = False
+        self._network.eval()
+        self._fsa_done = True
+        logging.info(
+            "[FSA] first_section_adaptation completed; convnet re-frozen for DS-AL."
+        )
 
     def _one_hot(self, labels: torch.Tensor, total_classes: int) -> torch.Tensor:
         one_hot = torch.zeros(
@@ -250,6 +331,9 @@ class DSALLearner(BaseLearner):
             "dsal_main": [],
             "dsal_fused": [],
         }
+
+        if self._use_fsa and not self._fsa_done:
+            self._first_section_adaptation(data_manager)
 
         for task in range(data_manager.nb_tasks):
             self.incremental_train(data_manager)
