@@ -25,7 +25,7 @@ def train(args):
         # Create log directory
         logfile_head = os.path.join(
             f"{args['model_name']}_0624_logs_{args['user']}",
-            f"{args['dataset']}_{args['convnet_type']}"
+            f"{args['dataset']}_{args['vit_type']}"
         )
         os.makedirs(logfile_head, exist_ok=True)
         

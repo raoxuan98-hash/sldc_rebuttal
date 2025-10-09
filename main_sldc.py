@@ -41,7 +41,7 @@ if __name__ == '__main__':
     
     # Basic options
     parser.add_argument('--test_only', default=False, action='store_true')
-    parser.add_argument('--dataset', type=str, default='cars196_224', choices=['imagenet-r', 'cifar100_224', 'cub200_224', 'cars196_224'], help='Dataset to use')
+    parser.add_argument('--dataset', type=str, default='imagenet-r', choices=['imagenet-r', 'cifar100_224', 'cub200_224', 'cars196_224'], help='Dataset to use')
     parser.add_argument('--smart_defaults', default=False, action='store_true')
     parser.add_argument('--prefix', type=str, default="original")
     
@@ -56,8 +56,9 @@ if __name__ == '__main__':
     parser.add_argument('--increment', type=int, default=20)
     
     # Model parameters
-    parser.add_argument('--model_name', type=str, default='sldc')
-    parser.add_argument('--convnet_type', type=str, default='vit-b-p16-lora-mae', choices=['vit-b-p16-lora-mocov3', 'vit-b-p16-lora', 'vit-b-p16-lora-mae'])
+    parser.add_argument('--model_name', type=str, default='acil', choices=['sldc', 'acil', 'dsal'])
+    parser.add_argument('--vit_type', type=str, default='vit-b-p16-mocov3', choices=['vit-b-p16-lora-mocov3', 'vit-b-p16-lora', 'vit-b-p16-lora-mae'])
+    parser.add_argument('--lora_type', type=str, default='basic_lora', choices=['full', 'basic_lora'])
     parser.add_argument('--weight_decay', type=float, default=3e-5)
     parser.add_argument('--device', nargs='+', default=['0'])
     parser.add_argument('--lora_rank', type=int, default=4)
@@ -66,7 +67,7 @@ if __name__ == '__main__':
     # Training parameters
     parser.add_argument('--sce_a', type=float, default=0.5)
     parser.add_argument('--sce_b', type=float, default=0.5)
-    parser.add_argument('--seed', nargs='+', type=int, default=[1993, 1996, 1997])
+    parser.add_argument('--seed', nargs='+', type=int, default=[1990, 1996, 1997])
     parser.add_argument('--epochs', type=int, default=1)
     parser.add_argument('--ca_epochs', type=int, default=5)
     parser.add_argument('--optimizer', type=str, default='adamw')
@@ -98,8 +99,8 @@ if __name__ == '__main__':
     parser.add_argument('--random_feature_dim', type=int, default=8192)
     parser.add_argument('--ridge_lambda', type=float, default=1e-3)
     parser.add_argument('--rls_eps', type=float, default=1e-6)
-    parser.add_argument('--acil_activation', type=str, default='gelu')
-    parser.add_argument('--dsal_main_activation', type=str, default='gelu')
+    parser.add_argument('--acil_activation', type=str, default='relu')
+    parser.add_argument('--dsal_main_activation', type=str, default='relu')
     parser.add_argument('--dsal_comp_activation', type=str, default='tanh')
     parser.add_argument('--dsal_fusion_weight', type=float, default=1.0)
 

@@ -1,0 +1,13 @@
+# 忽略所有 .pth 文件
+*.pth
+
+# 忽略特定文件夹（加 / 表示是文件夹）
+acil_0624_logs_null/
+.history/
+data/
+
+# （可选）如果你只想忽略某个文件夹下的 .pth 文件
+# outputs/*.pth
+
+# （可选）保留某些例外文件
+# !important_model.pth

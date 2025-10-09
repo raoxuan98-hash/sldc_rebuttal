@@ -1,44 +1,44 @@
 import copy
 import torch
 from torch import nn
-from convs.cifar_resnet import resnet32
-from convs.resnet import resnet18, resnet34, resnet50
-from convs.linears import SimpleContinualLinear, BayesContinualLinear
-from convs.vits import vit_base_patch16_224_in21k, vit_base_patch16_224_mocov3, vit_base_lora_patch16_224_in21k, vit_base_lora_patch16_224_mocov3, vit_base_lora_patch16_224_mae
-import torch.nn.functional as F
-from copy import deepcopy
+import timm
+from models.basic_lora import PlainLoRAViT
 
-def get_convnet(cfg, pretrained=False):
-    name = cfg['convnet_type']
-    name = name.lower()
-    if name == 'resnet32':
-        return resnet32()
-    elif name == 'resnet18':
-        return resnet18(pretrained=pretrained)
-    elif name == 'resnet18_cifar':
-        return resnet18(pretrained=pretrained, cifar=True)
-    elif name == 'resnet18_cifar_cos':
-        return resnet18(pretrained=pretrained, cifar=True, no_last_relu=True)
-    elif name == 'resnet34':
-        return resnet34(pretrained=pretrained)
-    elif name == 'resnet50':
-        return resnet50(pretrained=pretrained)
-    elif name == 'vit-b-p16':
-        return vit_base_patch16_224_in21k(pretrained=True)
+
+def get_vit(args, pretrained=False):
+    name = args['vit_type'].lower()
+    rank = args['lora_rank']
+    num_used_layers = args.get('num_used_layers', 1)  # default to 1
+
+    if name == 'vit-b-p16':
+        vit = timm.create_model("vit_base_patch16_224", pretrained=pretrained, num_classes=0)
     elif name == 'vit-b-p16-mocov3':
-        return vit_base_patch16_224_mocov3(pretrained=True)
-    elif name == 'vit-b-p16-lora':
-        return vit_base_lora_patch16_224_in21k(pretrained=True, lora_rank=cfg['lora_rank'])
-    elif name == 'vit-b-p16-lora-mocov3':
-        return vit_base_lora_patch16_224_mocov3(pretrained=True, lora_rank=cfg['lora_rank'])
-    elif name == 'vit-b-p16-lora-mae':
-        return vit_base_lora_patch16_224_mae(pretrained=True, lora_rank=cfg['lora_rank'])
+        vit = timm.create_model('vit_base_patch16_224', pretrained=False, num_classes=0)
+        model_dict = torch.load('mocov3-vit-base-300ep.pth', weights_only=False)
+        vit.load_state_dict(model_dict['model'], strict=True)
+    elif name == 'vit-b-p16-dino':
+        vit = timm.create_model('vit_base_patch16_224.dino', pretrained=pretrained, num_classes=0)
+    elif name == 'vit-b-p16-mae':
+        vit = timm.create_model('vit_base_patch16_224.mae', pretrained=pretrained, num_classes=0)
     else:
-        raise NotImplementedError('Unknown type {}'.format(name))
+        raise ValueError(f'Model {name} not supported')
+
+    # Remove original head (already num_classes=0, but ensure)
+    if hasattr(vit, 'head') and isinstance(vit.head, nn.Linear):
+        vit.head = nn.Identity()
+
+    lora_type = args['lora_type']
+    if lora_type == "full":
+        model = vit
+    elif lora_type == "basic_lora":
+        model = PlainLoRAViT(vit, r=rank)
+    else:
+        raise ValueError(f"LoRA type {lora_type} not supported")
+    
+    return model
 
 import torch
 import torch.nn as nn
-
 
 class ContinualLinear(nn.Module):
     def __init__(self, embed_dim, nb_classes):
@@ -82,7 +82,7 @@ class ContinualLinear(nn.Module):
 class BaseNet(nn.Module):
     def __init__(self, cfg, pretrained):
         super(BaseNet, self).__init__()
-        self.convnet = get_convnet(cfg, pretrained)
+        self.convnet = get_vit(cfg, pretrained)
         self.fc = None
 
     @property
@@ -123,7 +123,7 @@ class FinetuneIncrementalNet(BaseNet):
 
     @property
     def feature_dim(self):
-        return self.convnet.out_dim * self.convnet.num_used_layers
+        return self.convnet.feature_dim
 
     def extract_layerwise_vector(self, x, pool=True):
         with torch.no_grad():
