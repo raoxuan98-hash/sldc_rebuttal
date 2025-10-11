@@ -43,8 +43,7 @@ class DSALLearner(BaseLearner):
         super().__init__(args)
         self.args = args
         self._network = FinetuneIncrementalNet(
-            args, pretrained=True, num_used_layers=args.get("num_used_layers", 1)
-        )
+            args, pretrained=True)
         self._network.to(self._device)
         self._network.eval()
         for param in self._network.convnet.parameters():
@@ -99,7 +98,7 @@ class DSALLearner(BaseLearner):
         self._fsa_steps = int(args.get("fsa_steps", 1000))
         self._fsa_lr = float(args.get("fsa_lr", 1e-4))
         self._fsa_wd = float(args.get("fsa_weight_decay", 3e-5))
-        self._fsa_bs = int(args.get("fsa_batch_size", 32))
+        self._fsa_bs = int(args.get("fsa_batch_size", 16))
 
     # ------------------------------------------------------------------
     # Feature helpers (double)
@@ -133,11 +132,12 @@ class DSALLearner(BaseLearner):
         self._network.eval()
         for _, (_, inputs, targets) in enumerate(loader):
             inputs = inputs.to(self._device, non_blocking=True)
-            features = self._network.convnet(inputs)["features"]  # float32
-            feats.append(features.cpu())
+            targets = targets.to(self._device, non_blocking=True)  # keep on GPU
+            features = self._network.convnet(inputs)["features"]  # float32 on GPU
+            feats.append(features)  # keep on GPU
             labels.append(targets)
-        features_all = torch.cat(feats, dim=0).to(self._device)
-        labels_all = torch.cat(labels, dim=0).to(self._device)
+        features_all = torch.cat(feats, dim=0)  # still on GPU
+        labels_all = torch.cat(labels, dim=0)   # still on GPU
         return {"features": features_all, "labels": labels_all}
 
     def _one_hot(self, labels: torch.Tensor, total_classes: int) -> torch.Tensor:
@@ -160,14 +160,15 @@ class DSALLearner(BaseLearner):
             with_raw=False,
         )
         train_loader = self._build_dataloader(
-            train_dataset, batch_size=self._fsa_bs, shuffle=True
+            train_dataset, batch_size=16, shuffle=True
         )
 
         for n, p in self._network.convnet.named_parameters():
-            if "lora" in n or "norm" in n or "bias" in n:
+            if "A" in n or "B" in n or "norm" in n:
                 p.requires_grad = True
             else:
                 p.requires_grad = False
+
         self._network.train()
 
         classifier = torch.nn.Linear(self._feature_dim, first_task_size).to(self._device)
@@ -279,11 +280,13 @@ class DSALLearner(BaseLearner):
     # Incremental & Eval (double)
     # ------------------------------------------------------------------
     def incremental_train(self, data_manager):
+        """Class-balanced RLS training for DS-AL."""
         self._cur_task += 1
         task_size = data_manager.get_task_size(self._cur_task)
         self._total_classes = self._known_classes + task_size
         self.topk = min(self._total_classes, 5)
 
+        # --- 1. 构建当前任务数据集 ---
         train_dataset = data_manager.get_dataset(
             np.arange(self._known_classes, self._total_classes),
             source="train",
@@ -295,25 +298,45 @@ class DSALLearner(BaseLearner):
             train_dataset, batch_size=64, shuffle=False
         )
 
+        # --- 2. 提取特征与标签 ---
         batch_data = self._extract_features(self.train_loader)
-        features = batch_data["features"]
-        labels = batch_data["labels"]
+        features = batch_data["features"]  # [N, D]
+        labels = batch_data["labels"]      # [N]
 
-        # 主流：随机特征 -> 激活_main -> RLS
-        X_main = self._project(features, stream="main")
-        targets = self._one_hot(labels, self._total_classes)
+        # ================================================================
+        # 🧩 Step 3: Class-balanced weighting
+        # ================================================================
+        unique_labels, counts = torch.unique(labels, return_counts=True)
+        count_dict = {int(k): float(v) for k, v in zip(unique_labels, counts)}
+
+        # 每个样本的权重 w_i = 1 / sqrt(n_class)
+        weights = torch.tensor(
+            [1.0 / math.sqrt(count_dict[int(lbl)]) for lbl in labels],
+            device=self._device,
+            dtype=self._dtype,
+        ).view(-1, 1)
+
+        # ================================================================
+        # 🧩 Step 4: 主流更新（Main stream RLS）
+        # ================================================================
+        X_main = self._project(features, stream="main") * weights  # [N, rf_dim]
+        targets = self._one_hot(labels, self._total_classes) * weights  # [N, C]
         self._update_main(X_main, targets)
 
-        # 残差：Y - main(X)
+        # --- 计算残差 ---
         with torch.no_grad():
             main_logits = X_main @ self._W_main
         residual_full = targets - main_logits
         residual_new = residual_full[:, self._known_classes : self._total_classes]
 
-        # 补偿流：随机特征 -> 激活_comp -> 全列 RLS + PLC
-        X_comp = self._project(features, stream="comp")
+        # ================================================================
+        # 🧩 Step 5: 补偿流更新（Compensation stream RLS）
+        # ================================================================
+        X_comp = self._project(features, stream="comp") * weights
+        residual_new = residual_new * weights
         self._update_compensation(X_comp, residual_new, task_size)
 
+        # --- 6. 更新状态 ---
         self._known_classes = self._total_classes
 
     def _forward_main(self, inputs: torch.Tensor) -> torch.Tensor:

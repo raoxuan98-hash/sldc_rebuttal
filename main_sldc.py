@@ -20,21 +20,21 @@ def set_smart_defaults(args):
         elif args.dataset == 'imagenet-r':
             args.init_cls = 20
             args.increment = 20
-            args.epochs = 10
+            args.epochs = 1
         
         elif args.dataset == 'cifar100_224':
             args.init_cls = 10
-            args.increment = 10     
+            args.increment = 2     
             args.epochs = 5
 
         elif args.dataset == 'cub200_224':
             args.init_cls = 20
-            args.increment = 20
+            args.increment = 4
             args.epochs = 15
     return args
 # In[]
 import os
-# os.environ["CUDA_VISIBLE_DEVICES"] = "4"
+os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='SLDC experiments unified management.')
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     # Basic options
     parser.add_argument('--test_only', default=False, action='store_true')
     parser.add_argument('--dataset', type=str, default='imagenet-r', choices=['imagenet-r', 'cifar100_224', 'cub200_224', 'cars196_224'], help='Dataset to use')
-    parser.add_argument('--smart_defaults', default=False, action='store_true')
+    parser.add_argument('--smart_defaults', default=True, action='store_true')
     parser.add_argument('--prefix', type=str, default="original")
     
     # Memory parameters  
@@ -57,12 +57,11 @@ if __name__ == '__main__':
     
     # Model parameters
     parser.add_argument('--model_name', type=str, default='sldc')
-    parser.add_argument('--vit_type', type=str, default='vit-b-p16-mocov3', choices=['vit-b-p16-lora-mocov3', 'vit-b-p16-lora', 'vit-b-p16-lora-mae'])
+    parser.add_argument('--vit_type', type=str, default='vit-b-p16-mocov3', choices=['vit-b-p16-mocov3', 'vit-b-p16', 'vit-b-p16-mae'])
     parser.add_argument('--lora_type', type=str, default='basic_lora', choices=['full', 'basic_lora'])
     parser.add_argument('--weight_decay', type=float, default=3e-5)
     parser.add_argument('--device', nargs='+', default=['0'])
     parser.add_argument('--lora_rank', type=int, default=4)
-    parser.add_argument('--num_used_layers', type=int, default=1)
     
     # Training parameters
     parser.add_argument('--sce_a', type=float, default=0.5)
@@ -76,14 +75,14 @@ if __name__ == '__main__':
     parser.add_argument('--head_scale', type=float, default=10.0)
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--tune_classifier', default=True)
-    parser.add_argument('--gamma_norm', default=0.1, type=float)
+    parser.add_argument('--gamma_norm', default=0.5, type=float)
     parser.add_argument('--gamma_kd', type=float, default=1.0)
     parser.add_argument('--kd_type', type=str, default='feat')
     parser.add_argument('--only_lora', default=True, action='store_true')
     parser.add_argument('--user', type=str, default='null', choices=['null'])
     parser.add_argument('--num_workers', type=int, default=4)
 
-    parser.add_argument('--use_linear_compensation', type=bool, default=False)
+    parser.add_argument('--use_linear_compensation', type=bool, default=True)
     parser.add_argument('--use_weak_nonlinear_compensation', type=bool, default=True)
     parser.add_argument('--use_mlp_compensation', type=bool, default=False)
     parser.add_argument('--gamma_1', type=float, default=1e-4)

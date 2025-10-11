@@ -15,9 +15,6 @@ if __name__ == '__main__':
         description='ACIL / DS-AL experiments unified management.'
     )
 
-    import os
-    os.environ['CUDA_VISIBLE_DEVICES'] = '1' 
-
     # Basic options
     parser.add_argument('--test_only', default=False, action='store_true')
     parser.add_argument(
@@ -25,7 +22,7 @@ if __name__ == '__main__':
         type=str,
         default='cifar100_224',
         choices=['imagenet-r', 'cifar100_224', 'cub200_224', 'cars196_224'],
-        help='Dataset to use',
+        help='Dataset to use'
     )
     parser.add_argument('--smart_defaults', default=False, action='store_true')
     parser.add_argument('--prefix', type=str, default='original')
@@ -48,12 +45,13 @@ if __name__ == '__main__':
         '--vit_type',
         type=str,
         default='vit-b-p16-mocov3',
-        choices=['vit-b-p16-lora-mocov3', 'vit-b-p16-lora', 'vit-b-p16-lora-mae']
+        choices=['vit-b-p16-mocov3', 'vit-b-p16-lora', 'vit-b-p16-mae']
     )
 
     parser.add_argument(
         '--lora_type', type=str, default='basic_lora', choices=['full', 'basic_lora']
     )
+    
     parser.add_argument('--weight_decay', type=float, default=3e-5)
     parser.add_argument('--device', nargs='+', default=['0'])
     parser.add_argument('--lora_rank', type=int, default=4)
@@ -74,7 +72,7 @@ if __name__ == '__main__':
     parser.add_argument('--gamma_kd', type=float, default=1.0)
     parser.add_argument('--kd_type', type=str, default='feat')
     parser.add_argument('--only_lora', default=True, action='store_true')
-    parser.add_argument('--user', type=str, default='null', choices=['null'])
+    parser.add_argument('--user', type=str, default='authors', choices=['authors'])
     parser.add_argument('--num_workers', type=int, default=4)
     parser.add_argument('--gamma_2', type=float, default=0.5)
     parser.add_argument('--alpha_t', type=float, default=1.0)
@@ -108,20 +106,21 @@ if __name__ == '__main__':
         '--first_section_adaptation',
         dest='first_section_adaptation',
         type=bool,
-        default=True
+        default=False
     )
 
     parser.add_argument(
         '--no_first_section_adaptation',
         dest='first_section_adaptation',
-        action='store_false',
+        type=bool,
+        default=True
     )
 
     parser.set_defaults(first_section_adaptation=True)
-    parser.add_argument('--fsa_steps', type=int, default=1000)
+    parser.add_argument('--fsa_steps', type=int, default=0)
     parser.add_argument('--fsa_lr', type=float, default=1e-4)
-    parser.add_argument('--fsa_weight_decay', type=float, default=0.0)
-    parser.add_argument('--fsa_batch_size', type=int, default=32)
+    parser.add_argument('--fsa_weight_decay', type=float, default=1e-5)
+    parser.add_argument('--fsa_batch_size', type=int, default=16)
 
     args = parser.parse_args()
     main(args)

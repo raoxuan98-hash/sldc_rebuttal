@@ -2,13 +2,11 @@ import copy
 import torch
 from torch import nn
 import timm
-from models.basic_lora import PlainLoRAViT
-
+from models.basic_lora import LoRAViT
 
 def get_vit(args, pretrained=False):
     name = args['vit_type'].lower()
     rank = args['lora_rank']
-    num_used_layers = args.get('num_used_layers', 1)  # default to 1
 
     if name == 'vit-b-p16':
         vit = timm.create_model("vit_base_patch16_224", pretrained=pretrained, num_classes=0)
@@ -30,15 +28,16 @@ def get_vit(args, pretrained=False):
     lora_type = args['lora_type']
     if lora_type == "full":
         model = vit
+
     elif lora_type == "basic_lora":
-        model = PlainLoRAViT(vit, r=rank)
+        model = LoRAViT(vit, r=rank, use_dora=False)
+        model.activate_lora_params(include_norms=False)
+
     else:
         raise ValueError(f"LoRA type {lora_type} not supported")
     
     return model
 
-import torch
-import torch.nn as nn
 
 class ContinualLinear(nn.Module):
     def __init__(self, embed_dim, nb_classes):
@@ -87,7 +86,7 @@ class BaseNet(nn.Module):
 
     @property
     def feature_dim(self):
-        return self.convnet.out_dim
+        return self.convnet.feature_dim
 
     def extract_vector(self, x):
         return self.convnet(x)['features']
@@ -116,34 +115,18 @@ class BaseNet(nn.Module):
 
 class FinetuneIncrementalNet(BaseNet):
 
-    def __init__(self, cfg, pretrained, num_used_layers=1):
+    def __init__(self, cfg, pretrained):
         super().__init__(cfg, pretrained)
-        self.old_fc = None
-        self.convnet.num_used_layers = num_used_layers
 
     @property
     def feature_dim(self):
         return self.convnet.feature_dim
-
-    def extract_layerwise_vector(self, x, pool=True):
-        with torch.no_grad():
-            features = self.convnet(x, layer_feat=True)['features']
-        for f_i in range(len(features)):
-            if pool:
-                features[f_i] = features[f_i].mean(1).cpu().numpy() 
-            else:
-                features[f_i] = features[f_i][:, 0].cpu().numpy() 
-        return features
 
     def update_fc(self, nb_classes, freeze_old=True):
         if self.fc is None:
             self.fc = ContinualLinear(self.feature_dim, nb_classes)
         else:
             self.fc.update(nb_classes, freeze_old)
-
-    def generate_fc(self, in_dim, out_dim):
-        fc = nn.Linear(in_dim, out_dim)
-        return fc
 
     def forward(self, x):
         x = self.convnet(x)

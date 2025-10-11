@@ -9,6 +9,7 @@ from models.base import BaseLearner
 import copy
 from utils.inc_net import FinetuneIncrementalNet
 import time
+from models.sldc_modules import SLDC_Drift_Compensator
 
 num_workers = 4
 eval_freq = 1000
@@ -39,35 +40,14 @@ def soft_distillation_loss(student_logits, teacher_logits, T=2):
 class SubspaceLoRA(BaseLearner):
     def __init__(self, args):
         super().__init__(args)
-        self._network = FinetuneIncrementalNet(args, pretrained=True, num_used_layers=num_used_layers)
+        self._network = FinetuneIncrementalNet(args, pretrained=True)
         self.model_name = args['model_name']
         self.args = args
-
 
         self.model_prefix = args['prefix']
         self.sce_a, self.sce_b = args['sce_a'], args['sce_b']
         self.sldc_compensator = SLDC_Drift_Compensator(args)
 
-        for n, p in self._network.convnet.named_parameters():
-            if args['only_lora']:
-                if  'lora' in n:
-                    p.requires_grad=True
-                else:
-                    p.requires_grad=False
-            else:
-                if 'norm' in n or 'bias' in n or 'lora' in n or "cls_token" in n:
-                    p.requires_grad=True
-                else:
-                    p.requires_grad=False
-
-        if args['test_only']:
-            pass
-        
-        else:
-            for b_idx in range(self._network.convnet.lora_lp):
-                self._network.convnet.blocks[b_idx].mlp.init_lora()
-                self._network.convnet.blocks[b_idx].attn.init_lora()
-        
         self._network.cuda()
 
         if 'weight_decay' in args.keys():
@@ -133,7 +113,8 @@ class SubspaceLoRA(BaseLearner):
     def after_task(self):
         self._known_classes = self._total_classes
         logging.info('Exemplar size: {}'.format(self.exemplar_size))
-        self.save_checkpoint(self.log_path+'/'+self.model_prefix+'_seed{}'.format(self.seed))
+        # self._network.convnet.merge_lora_weights(reset_after=True)
+        # self.save_checkpoint(self.log_path+'/'+self.model_prefix+'_seed{}'.format(self.seed))
         self.task_count += 1
     
     def incremental_train(self, data_manager):
@@ -150,13 +131,7 @@ class SubspaceLoRA(BaseLearner):
         train_dset_test_mode = data_manager.get_dataset(
             np.arange(self._known_classes, self._total_classes), source='train', mode='test')
         
-        #dset_name = data_manager.dataset_name.lower()
-
-       # 动态获取数据集名称
-        if hasattr(data_manager, 'get_current_dataset_name'):  # 混合数据集
-          dset_name = data_manager.get_current_dataset_name()
-        else:  # 单个数据集
-          dset_name = data_manager.dataset_name.lower() if hasattr(data_manager, 'dataset_name') else "Unknown"
+        dset_name = data_manager.dataset_name.lower()
 
         self.train_loader = DataLoader(train_dset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
         self.test_loader = DataLoader(test_dset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
@@ -165,6 +140,7 @@ class SubspaceLoRA(BaseLearner):
         """系统学习"""
         self._network.update_fc(task_size, freeze_old=False)
         self._network.fc.to(self._device)
+        
         self._previous_network = copy.deepcopy(self._network).cuda()
         self._previous_network.eval()
 
@@ -183,7 +159,6 @@ class SubspaceLoRA(BaseLearner):
         self.weak_nonlinear_fc = fc_dict['without_aux']['weak_nonlinear']
         self.mlp_fc = fc_dict['without_aux']['mlp']
 
-
         self.linear_fc_aux = fc_dict['with_aux']['linear']
         self.weak_nonlinear_fc_aux = fc_dict['with_aux']['weak_nonlinear']
         self.mlp_fc_aux = fc_dict['with_aux']['mlp']
@@ -196,14 +171,6 @@ class SubspaceLoRA(BaseLearner):
         logging.info(f"  - Classifier refinement: {cr_time:.2f}s")
         logging.info(f"  - Total Training Time: {total_time:.2f}s")
 
-    def compute_transformation_matrix(self, features_old, features_new, lambda_val=0.2):
-        X = F.normalize(features_old, dim=1)
-        Y = F.normalize(features_new, dim=1)
-        XTX = X.T @ X + 1e-4 * torch.eye(features_old.size(1), device=features_old.device)
-        XTY = X.T @ Y + 1e-4 * torch.eye(features_new.size(1), device=features_old.device)
-        W = torch.linalg.solve(XTX, XTY)
-        return W
-
     def get_optimizer(self, network_params, lr, weight_decay):
         if optimizer_type == 'sgd':
             return optim.SGD(network_params, lr=lr, weight_decay=weight_decay, momentum=0.9)
@@ -213,8 +180,8 @@ class SubspaceLoRA(BaseLearner):
             return optim.RMSprop(network_params, lr=lr, weight_decay=weight_decay)
 
     def system_training(self, train_loader, test_loader):
-        base_lora_params_slow = [p for n, p in self._network.convnet.named_parameters() if p.requires_grad==True and 'lora' in n]
-        base_others_params_slow = [p for n, p in self._network.convnet.named_parameters() if p.requires_grad==True and 'lora' not in n]
+        base_lora_params_slow = self._network.convnet.return_lora_params()
+        base_others_params_slow = self._network.convnet.return_lightweight_params()
         base_fc_params_slow = [p for p in self._network.fc.parameters() if p.requires_grad==True]
         
         base_lora_params_slow = {'params': base_lora_params_slow, 'lr': lrate, 'weight_decay': weight_decay}
@@ -224,6 +191,7 @@ class SubspaceLoRA(BaseLearner):
         network_params_slow = [base_lora_params_slow, base_others_params_slow, base_fc_params_slow]
         optimizer_slow = self.get_optimizer(network_params_slow, lrate, weight_decay)
         scheduler_slow = optim.lr_scheduler.CosineAnnealingLR(optimizer=optimizer_slow, T_max=epochs, eta_min=lrate/3)
+        
         self.system_run(train_loader, optimizer_slow, scheduler_slow)
 
     def calculate_kd_loss(self, previous_features, current_features):
@@ -238,6 +206,7 @@ class SubspaceLoRA(BaseLearner):
 
     def system_run(self, train_loader, optimizer_slow, scheduler_slow):
         run_epochs = epochs
+        ce = nn.CrossEntropyLoss(label_smoothing=0.1)
         for epoch in range(1, run_epochs + 1):
            
             self._network.train()
@@ -251,7 +220,7 @@ class SubspaceLoRA(BaseLearner):
                 slow_features = self._network.convnet(inputs)['features']
                 slow_logits = self._network.fc(slow_features)
 
-                if use_feature_kd and self._cur_task > 0:
+                if use_feature_kd:
                     with torch.no_grad():
                         previous_slow_features = self._previous_network.convnet(inputs)['features']
                     feature_kd_loss = self.calculate_kd_loss(previous_slow_features, slow_features)
@@ -265,7 +234,7 @@ class SubspaceLoRA(BaseLearner):
                 cur_targets = torch.where(targets - self._known_classes >= 0, targets - self._known_classes, -100)
                 cur_slow_logits = slow_logits[:, self._known_classes:]
              
-                rce_loss_slow = symmetric_cross_entropy_loss(cur_slow_logits, cur_targets, self.sce_a, self.sce_b)                
+                rce_loss_slow = ce(cur_slow_logits, cur_targets)                
                 rce_loss_slows += rce_loss_slow.item()
 
                 loss = rce_loss_slow + feature_kd_loss
@@ -396,7 +365,6 @@ class SubspaceLoRA(BaseLearner):
             self.incremental_train(data_manager)
             task_results = self.eval_task()
             
-            # Store results for each classifier type (both original and auxiliary)
             for classifier in final_results.keys():
                 if classifier in task_results:
                     final_results[classifier].append(task_results[classifier])

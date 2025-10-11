@@ -128,8 +128,6 @@ def _build_log_dir(args: Dict[str, Any], log_root: str) -> str:
         f"wd-{_format_float(args.get('weight_decay', 0.0))}",
         f"lora-{args.get('lora_type', 'na')}",
         f"rank-{args.get('lora_rank', 'na')}",
-        f"layers-{args.get('num_used_layers', 'na')}",
-        f"bs-{args['batch_size']}",
         f"epoch-{args['epochs']}",
         f"seed-{args['seed']}",
     ]
@@ -148,15 +146,12 @@ def _build_log_dir(args: Dict[str, Any], log_root: str) -> str:
             f"fusion-{_format_float(args.get('dsal_fusion_weight', 0.0))}",
         ])
 
-    if args.get('first_section_adaptation', False):
+    if args['first_section_adaptation']:
         parts.append(
-            f"fsa-{args.get('fsa_steps', 'na')}-lr-{_format_float(args.get('fsa_lr', 0.0))}"
-        )
+            f"fsa-{args.get('fsa_steps', 'na')}-lr-{_format_float(args.get('fsa_lr', 0.0))}")
     else:
         parts.append('nofsa')
 
-    if args.get('only_lora'):
-        parts.append('onlylora')
 
     return os.path.join(log_root, '_'.join(str(part) for part in parts))
 

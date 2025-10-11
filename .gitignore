@@ -3,8 +3,14 @@
 
 # 忽略特定文件夹（加 / 表示是文件夹）
 acil_0624_logs_null/
+dsal_0624_logs_authors/
 .history/
 data/
+sldc_0624_logs_null/
+nohup.out
+runtime_results/
+*.pt
+
 
 # （可选）如果你只想忽略某个文件夹下的 .pth 文件
 # outputs/*.pth

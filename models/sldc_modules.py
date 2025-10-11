@@ -7,20 +7,6 @@ from torchvision import datasets, transforms
 import numpy as np
 from torch.utils.data import DataLoader, Subset
 
-class WeightedLinear(nn.Module):
-    def __init__(self, in_features, out_features, bias=True, use_scale=True):
-        super().__init__()
-        self.linear = nn.Linear(in_features, out_features, bias=bias)
-        self.use_scale = use_scale
-        
-        if use_scale:
-            self.scale = nn.Parameter(torch.ones(out_features))
-        else:
-            self.scale = torch.ones(1)
-    def forward(self, x):
-        x = self.linear(x)
-        return x * self.scale
-
 def cholesky_manual_parallel(matrix):
     n = matrix.size(0)
     L = torch.zeros_like(matrix)
